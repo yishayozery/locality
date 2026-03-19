@@ -3,180 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locality Pro - Complete Flow</title>
+    <title>Locality - Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
-        body { font-family: 'Assistant', sans-serif; }
-        #map { height: 250px; width: 100%; border-radius: 1.5rem; z-index: 10; }
-        .cart-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 99px; }
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700;800&display=swap');
+        body { font-family: 'Assistant', sans-serif; transition: all 0.3s ease; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-24">
-    <nav class="bg-indigo-900 text-white p-4 shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto space-y-3">
-            <div class="flex justify-between items-center">
-                <h1 class="text-xl font-black text-emerald-400">LOCALITY</h1>
-                <button onclick="toggleCart()" class="relative bg-indigo-800 p-2 rounded-xl">
-                    🛒 <span id="cart-count" class="cart-badge">0</span>
-                </button>
-            </div>
-            <div class="relative">
-                <input type="text" id="searchInput" oninput="handleSearch()" placeholder="חפש מוצר או חנות..." 
-                       class="w-full p-3 pr-10 rounded-xl text-slate-900 text-sm shadow-inner outline-none focus:ring-2 focus:ring-emerald-400">
-            </div>
-        </div>
-    </nav>
+<body class="bg-slate-50 min-h-screen">
 
-    <main class="container mx-auto p-4 space-y-6">
-        <div id="map-container" class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
-            <div id="map"></div>
-        </div>
-
-        <div id="view-section">
-            <h2 id="view-title" class="text-lg font-bold mb-4 text-slate-800 px-2">נקודות קרובות אליך</h2>
-            <div id="main-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div id="page-auth" class="page active flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md border border-slate-100">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black text-indigo-900 tracking-tighter">LOCALITY</h1>
+                <p class="text-slate-400 text-sm mt-2">ברוכים הבאים למערכת הלוגיסטיקה השיתופית</p>
+            </div>
+            
+            <div id="auth-form" class="space-y-4">
+                <input id="auth-email" type="email" placeholder="אימייל" class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 border-none">
+                <input id="auth-pass" type="password" placeholder="סיסמה" class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 border-none">
+                
+                <div class="flex gap-2 p-1 bg-slate-100 rounded-2xl">
+                    <button onclick="setRole('customer')" id="btn-cust" class="flex-1 py-2 rounded-xl font-bold text-sm transition bg-white shadow-sm text-indigo-600">לקוח קצה</button>
+                    <button onclick="setRole('vendor')" id="btn-vend" class="flex-1 py-2 rounded-xl font-bold text-sm transition text-slate-500">ספק/שותף</button>
                 </div>
-        </div>
-    </main>
 
-    <div id="cart-sidebar" class="hidden fixed inset-y-0 left-0 w-full md:w-96 bg-white shadow-2xl z-[60] p-6 flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">הסל שלי</h2>
-            <button onclick="toggleCart()" class="text-slate-400 text-2xl">&times;</button>
+                <button onclick="login()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all mt-4">התחברות / הרשמה</button>
+            </div>
         </div>
-        <div id="cart-items" class="flex-1 overflow-y-auto space-y-4">
+    </div>
+
+    <div id="page-vendor" class="page min-h-screen">
+        <nav class="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-50">
+            <h2 class="font-bold text-indigo-900">מרכז ספקים - Locality</h2>
+            <button onclick="logout()" class="text-xs text-red-500 font-bold">התנתק</button>
+        </nav>
+        <main class="container mx-auto p-6 space-y-6">
+            <div class="bg-indigo-900 rounded-3xl p-6 text-white shadow-xl">
+                <h3 class="text-2xl font-bold">שלום, <span id="vendor-name-display">ספק חדש</span>!</h3>
+                <p class="text-indigo-200 text-sm">בוא נשלים את הקמת הפרופיל שלך</p>
             </div>
-        <div class="border-t pt-4 mt-4">
-            <div class="flex justify-between mb-4 font-bold text-xl">
-                <span>סה"כ:</span>
-                <span id="cart-total">₪0.00</span>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h4 class="font-bold mb-4 flex items-center gap-2">🏢 פרטי העסק</h4>
+                    <div class="space-y-3">
+                        <input id="v-biz-name" placeholder="שם העסק / מותג" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none">
+                        <input id="v-biz-cat" placeholder="קטגוריה (למשל: מזון, אלקטרוניקה)" class="w-full p-3 bg-slate-50 rounded-xl border-none outline-none">
+                        <button onclick="saveVendorProfile()" class="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold">עדכן פרופיל</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h4 class="font-bold mb-4 flex items-center gap-2">📦 ניהול מלאי מהיר</h4>
+                    <p class="text-xs text-slate-400 mb-4">כאן תוכל להוסיף מוצרים שיוצגו בנקודות האיסוף</p>
+                    <button class="w-full border-2 border-dashed border-slate-200 py-8 rounded-xl text-slate-400 font-bold hover:bg-slate-50 transition">+ הוסף מוצר ראשון</button>
+                </div>
             </div>
-            <button onclick="checkout()" class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-bold shadow-lg">המשך לתשלום</button>
+        </main>
+    </div>
+
+    <div id="page-customer" class="page min-h-screen">
+        <nav class="bg-indigo-900 text-white p-4 flex justify-between items-center shadow-lg">
+            <h1 class="text-xl font-black text-emerald-400">LOCALITY</h1>
+            <div class="flex items-center gap-3">
+                <span class="text-[10px] opacity-70" id="user-welcome"></span>
+                <button onclick="logout()" class="bg-white/10 p-2 rounded-lg text-[10px]">התנתק</button>
+            </div>
+        </nav>
+        <div class="p-4 space-y-4">
+            <div id="map" class="h-64 w-full rounded-2xl shadow-inner border border-slate-200"></div>
+            <div id="cust-content" class="text-center py-10 text-slate-400 italic">המפה בטעינה...</div>
         </div>
     </div>
 
     <script>
-        const stores = [
-            { id: 1, name: "הפיצוציה של דני", lat: 32.0853, lng: 34.7818, catalog: [
-                { id: 101, item: "חלב טרי", price: 6.5, icon: "🥛" },
-                { id: 102, item: "לחם אחיד", price: 7.0, icon: "🍞" },
-                { id: 103, item: "שישיית מים", price: 12.0, icon: "💧" }
-            ]},
-            { id: 2, name: "מרכז יפו", lat: 32.0515, lng: 34.7536, catalog: [
-                { id: 201, item: "שמן זית", price: 39.0, icon: "🫒" },
-                { id: 202, item: "קפה שחור", price: 12.0, icon: "☕" },
-                { id: 203, item: "סוכר חום", price: 8.0, icon: "🍚" }
-            ]}
-        ];
+        let currentUser = null;
+        let selectedRole = 'customer';
 
-        let cart = [];
-        const map = L.map('map').setView([32.07, 34.77], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        const markers = [];
-
-        stores.forEach(s => {
-            const m = L.marker([s.lat, s.lng]).addTo(map);
-            m.on('click', () => loadStore(s));
-            markers.push({ marker: m, store: s });
-        });
-
-        function handleSearch() {
-            const q = document.getElementById('searchInput').value.toLowerCase();
-            const grid = document.getElementById('main-grid');
-            if(!q) { renderStores(); return; }
-
-            let results = [];
-            stores.forEach(s => {
-                s.catalog.forEach(p => {
-                    if(p.item.includes(q)) results.push({...p, storeName: s.name});
-                });
-            });
-
-            grid.innerHTML = results.map(p => `
-                <div class="bg-white p-4 rounded-2xl shadow-md border-2 border-emerald-100 text-center relative">
-                    <div class="text-[10px] text-indigo-500 font-bold mb-1">${p.storeName}</div>
-                    <div class="text-3xl mb-1">${p.icon}</div>
-                    <div class="font-bold text-slate-800 text-xs">${p.item}</div>
-                    <div class="text-emerald-600 font-bold mb-2">₪${p.price.toFixed(2)}</div>
-                    <button onclick="addToCart('${p.item}', ${p.price}, '${p.storeName}')" class="w-full bg-slate-900 text-white py-1 rounded-lg text-[10px]">הוסף</button>
-                </div>
-            `).join('');
+        function setRole(role) {
+            selectedRole = role;
+            document.getElementById('btn-cust').className = role === 'customer' ? 'flex-1 py-2 rounded-xl font-bold text-sm transition bg-white shadow-sm text-indigo-600' : 'flex-1 py-2 rounded-xl font-bold text-sm transition text-slate-500';
+            document.getElementById('btn-vend').className = role === 'vendor' ? 'flex-1 py-2 rounded-xl font-bold text-sm transition bg-white shadow-sm text-indigo-600' : 'flex-1 py-2 rounded-xl font-bold text-sm transition text-slate-500';
         }
 
-        function renderStores() {
-            document.getElementById('main-grid').innerHTML = stores.map(s => `
-                <div onclick="loadStoreById(${s.id})" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center cursor-pointer hover:border-indigo-400">
-                    <div class="text-3xl mb-2 text-indigo-900">📍</div>
-                    <div class="font-bold text-slate-800 text-sm">${s.name}</div>
-                    <div class="text-[10px] text-slate-400">לחץ לצפייה במלאי</div>
-                </div>
-            `).join('');
-        }
-
-        function loadStoreById(id) { loadStore(stores.find(s => s.id === id)); }
-
-        function loadStore(store) {
-            document.getElementById('view-title').innerText = `מוצרים ב${store.name}:`;
-            document.getElementById('main-grid').innerHTML = store.catalog.map(p => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
-                    <div class="text-3xl mb-2">${p.icon}</div>
-                    <div class="font-bold text-slate-800 text-sm">${p.item}</div>
-                    <div class="text-indigo-600 font-bold mb-2">₪${p.price.toFixed(2)}</div>
-                    <button onclick="addToCart('${p.item}', ${p.price}, '${store.name}')" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-xs font-bold">הוסף לסל</button>
-                </div>
-            `).join('');
-            window.scrollTo({ top: document.getElementById('view-section').offsetTop - 100, behavior: 'smooth' });
-        }
-
-        function addToCart(name, price, store) {
-            cart.push({name, price, store});
-            updateCart();
-            // אפקט קטן להודעה
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "✅ נוסף!";
-            setTimeout(() => btn.innerText = originalText, 1000);
-        }
-
-        function updateCart() {
-            document.getElementById('cart-count').innerText = cart.length;
-            const container = document.getElementById('cart-items');
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            document.getElementById('cart-total').innerText = `₪${total.toFixed(2)}`;
+        function login() {
+            const email = document.getElementById('auth-email').value;
+            if(!email) return alert("נא להזין אימייל");
             
-            container.innerHTML = cart.map((item, index) => `
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div>
-                        <div class="font-bold text-sm">${item.name}</div>
-                        <div class="text-[10px] text-slate-400">${item.store}</div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold">₪${item.price.toFixed(2)}</span>
-                        <button onclick="removeFromCart(${index})" class="text-red-500">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
+            currentUser = { email, role: selectedRole, name: email.split('@')[0] };
+            localStorage.setItem('locality_user', JSON.stringify(currentUser));
+            showPage();
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCart();
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('locality_user');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-auth').classList.add('active');
         }
 
-        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('hidden'); }
-
-        function checkout() {
-            if(cart.length === 0) return alert("הסל שלך ריק");
-            alert("תודה ישי! ההזמנה התקבלה במערכת Locality (בגרסת הדמו).");
-            cart = [];
-            updateCart();
-            toggleCart();
+        function showPage() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            if(currentUser.role === 'vendor') {
+                document.getElementById('page-vendor').classList.add('active');
+                document.getElementById('vendor-name-display').innerText = currentUser.name;
+            } else {
+                document.getElementById('page-customer').classList.add('active');
+                document.getElementById('user-welcome').innerText = `שלום, ${currentUser.name}`;
+                initMap();
+            }
         }
 
-        renderStores();
+        function saveVendorProfile() {
+            const bizName = document.getElementById('v-biz-name').value;
+            if(bizName) {
+                alert(`העסק "${bizName}" הוקם בהצלחה במערכת!`);
+                document.getElementById('vendor-name-display').innerText = bizName;
+            }
+        }
+
+        function initMap() {
+            setTimeout(() => {
+                if(window.mapObj) return;
+                window.mapObj = L.map('map').setView([32.07, 34.77], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.mapObj);
+                document.getElementById('cust-content').innerHTML = "📍 בחר נקודת איסוף כדי להתחיל בקניות";
+            }, 100);
+        }
+
+        // Check if already logged in
+        const saved = localStorage.getItem('locality_user');
+        if(saved) {
+            currentUser = JSON.parse(saved);
+            showPage();
+        }
     </script>
 </body>
 </html>
