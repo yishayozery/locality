@@ -10,77 +10,89 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
         body { font-family: 'Assistant', sans-serif; }
-        #map { height: 350px; width: 100%; border-radius: 1.5rem; z-index: 10; }
+        #map { height: 300px; width: 100%; border-radius: 1rem; z-index: 10; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
     <nav class="bg-indigo-900 text-white p-4 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-black">LOCALITY</h1>
-            <div id="selected-info" class="text-sm bg-indigo-800 px-4 py-1 rounded-full border border-indigo-700">
-                אנא בחר נקודת איסוף מהמפה
+            <h1 class="text-xl font-black tracking-tighter text-emerald-400">LOCALITY</h1>
+            <div id="active-store" class="text-xs bg-indigo-800 px-3 py-1 rounded-full border border-indigo-700">
+                בחר נקודת איסוף מהמפה...
             </div>
         </div>
     </nav>
 
     <main class="container mx-auto p-4 space-y-6">
-        <section class="bg-white p-2 rounded-[2rem] shadow-sm border">
+        <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
             <div id="map"></div>
-        </section>
+        </div>
 
-        <section>
-            <h2 id="store-title" class="text-xl font-bold mb-4 text-slate-800">מוצרים זמינים בנקודה:</h2>
-            <div id="products-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div class="col-span-full py-10 text-slate-400 italic">בחר נקודה במפה כדי לראות את המלאי...</div>
+        <div id="inventory-section">
+            <h2 id="store-name-display" class="text-lg font-bold mb-4 text-slate-800 px-2">מלאי זמין בנקודה</h2>
+            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="col-span-full py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl">
+                    📍 לחץ על סיכה במפה כדי לראות מה מוכרים שם
+                </div>
             </div>
-        </section>
+        </div>
     </main>
 
     <script>
-        // נתונים לדוגמה: נקודות ומוצרים
-        const locations = [
+        // Database לדוגמה: חנויות ומוצרים ייחודיים
+        const stores = [
             { 
                 id: 1, name: "הפיצוציה של דני", lat: 32.0853, lng: 34.7818, 
-                products: [
-                    { name: "חלב טרי", price: "6.50 ₪", img: "🥛" },
-                    { name: "לחם אחיד", price: "7.00 ₪", img: "🍞" },
-                    { name: "שישיית מים", price: "12.00 ₪", img: "💧" }
+                catalog: [
+                    { item: "חלב טרי", price: "6.50", icon: "🥛" },
+                    { item: "לחם אחיד", price: "7.00", icon: "🍞" },
+                    { item: "שישיית מים", price: "12.00", icon: "💧" },
+                    { item: "חטיף שוקולד", price: "5.00", icon: "🍫" }
                 ]
             },
             { 
                 id: 2, name: "מרכז יפו", lat: 32.0515, lng: 34.7536, 
-                products: [
-                    { name: "שמן זית", price: "35.00 ₪", img: "🫒" },
-                    { name: "קפה שחור", price: "10.00 ₪", img: "☕" },
-                    { name: "סוכר", price: "5.00 ₪", img: "🍚" }
+                catalog: [
+                    { item: "שמן זית בוטיק", price: "39.00", icon: "🫒" },
+                    { item: "קפה שחור חזק", price: "12.00", icon: "☕" },
+                    { item: "סוכר חום", price: "8.00", icon: "🍚" },
+                    { item: "זיתים סוריים", price: "15.00", icon: "🫙" }
                 ]
             }
         ];
 
-        // אתחול מפה
+        // אתחול מפה ממוקדת לתל אביב
         const map = L.map('map').setView([32.07, 34.77], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-        // הוספת סיכות
-        locations.forEach(loc => {
-            const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-            marker.bindPopup(`<b>${loc.name}</b><br>לחץ לבחירת הנקודה`);
-            marker.on('click', () => selectStore(loc));
+        // הוספת סיכות (Markers) לחנויות
+        stores.forEach(s => {
+            const marker = L.marker([s.lat, s.lng]).addTo(map);
+            marker.bindPopup(`<b>${s.name}</b><br>לחץ לצפייה במוצרים`);
+            marker.on('click', () => loadStore(s));
         });
 
-        function selectStore(loc) {
-            document.getElementById('selected-info').innerText = `חנות פעילה: ${loc.name}`;
-            document.getElementById('store-title').innerText = `מוצרים זמינים ב: ${loc.name}`;
+        // פונקציית טעינת מוצרים לפי נקודה
+        function loadStore(store) {
+            // עדכון כותרות
+            document.getElementById('active-store').innerText = `חנות: ${store.name}`;
+            document.getElementById('store-name-display').innerText = `מוצרים זמינים ב${store.name}:`;
             
-            const container = document.getElementById('products-container');
-            container.innerHTML = loc.products.map(p => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition">
-                    <div class="text-4xl mb-2">${p.img}</div>
-                    <div class="font-bold text-slate-800">${p.name}</div>
-                    <div class="text-indigo-600 font-bold">${p.price}</div>
-                    <button class="mt-3 w-full bg-slate-100 py-1 rounded-lg text-xs font-bold hover:bg-indigo-100 transition">הוסף להזמנה</button>
+            // רינדור המוצרים
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = store.catalog.map(p => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:border-emerald-400 transition-all text-center">
+                    <div class="text-4xl mb-2">${p.icon}</div>
+                    <div class="font-bold text-slate-800 text-sm">${p.item}</div>
+                    <div class="text-indigo-600 font-bold text-lg">₪${p.price}</div>
+                    <button class="mt-3 w-full bg-slate-900 text-white py-2 rounded-xl text-[10px] font-bold active:scale-95 transition">הזמן לאיסוף</button>
                 </div>
             `).join('');
+
+            // גלילה חלקה למוצרים (למובייל)
+            window.scrollTo({ top: document.getElementById('inventory-section').offsetTop - 80, behavior: 'smooth' });
         }
     </script>
 </body>
