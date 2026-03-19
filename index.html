@@ -3,295 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locality Ecosystem - Ver 13.0</title>
+    <title>Locality Ecosystem - Ver 14.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
-        body { font-family: 'Assistant', sans-serif; background-color: #f8fafc; scroll-behavior: smooth; }
+        body { font-family: 'Assistant', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
         .page { display: none; min-height: 100vh; flex-direction: column; }
-        .page.active { display: flex; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        nav { z-index: 1000; position: sticky; top: 0; }
-        #map { height: 450px; border-radius: 2.5rem; z-index: 1; border: 8px solid white; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .page.active { display: flex; animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        nav { z-index: 1000; position: sticky; top: 0; backdrop-filter: blur(8px); }
+        .auth-container { max-width: 500px; width: 100%; }
+        #map { height: 400px; border-radius: 3rem; z-index: 1; border: 12px solid white; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.15); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal.active { display: flex; }
-        .role-btn.active { background: white; color: #4338ca; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .role-pill.active { background: #4338ca; color: white; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-    <div id="page-auth" class="page active items-center justify-center p-4 py-12">
-        <div class="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-2xl w-full max-w-lg border border-slate-100 text-center relative">
-            <button onclick="adminEntry()" class="absolute top-8 left-8 text-[10px] text-slate-300 hover:text-indigo-500 font-bold tracking-widest uppercase transition-colors">Admin Access</button>
-            <h1 class="text-5xl font-black text-indigo-900 tracking-tighter mb-2 italic">LOCALITY</h1>
-            <p class="text-slate-400 text-sm mb-10 font-light">הזירה הלוגיסטית השיתופית</p>
+    <div id="page-auth" class="page active items-center justify-center p-6">
+        <div class="auth-container bg-white p-10 md:p-14 rounded-[4rem] shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+            <button onclick="adminQuickEntry()" class="absolute top-8 left-8 text-[10px] text-slate-300 hover:text-indigo-600 font-black tracking-widest uppercase">Admin</button>
+            
+            <h1 class="text-6xl font-black text-indigo-900 tracking-tighter mb-4 italic">LOCALITY</h1>
+            <p class="text-slate-400 text-sm mb-12 font-medium tracking-wide">ניהול לוגיסטיקה שיתופית חכמה</p>
 
-            <div id="step-id" class="space-y-4">
-                <input id="id-email" type="email" placeholder="הכנס אימייל (למשל: yishay100@gmail.com)" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-center font-bold">
-                <button onclick="checkIdentity()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-indigo-700 transition transform active:scale-95">המשך</button>
-                <div class="flex items-center gap-3 py-4 opacity-20"><hr class="flex-1"><span>OR</span><hr class="flex-1"></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <button class="border p-3 rounded-2xl text-xs font-bold hover:bg-slate-50 transition flex items-center justify-center gap-2"><img src="https://www.google.com/favicon.ico" class="w-4 h-4"> Google</button>
-                    <button class="border p-3 rounded-2xl text-xs font-bold hover:bg-slate-50 transition flex items-center justify-center gap-2"><span class="text-blue-600">f</span> Facebook</button>
+            <div id="auth-flow-id" class="space-y-6">
+                <div class="relative">
+                    <input id="input-email" type="email" placeholder="הכנס אימייל לזיהוי" class="w-full p-5 bg-slate-50 rounded-[2rem] border-2 border-slate-100 outline-none focus:border-indigo-500 text-center font-bold text-lg transition-all">
+                </div>
+                <button onclick="processIdentity()" class="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black text-xl shadow-xl hover:bg-indigo-700 transition transform active:scale-95">המשך לזירה</button>
+                
+                <div class="flex items-center gap-4 py-4 opacity-40"><hr class="flex-1 border-slate-300"><span>או התחבר עם</span><hr class="flex-1 border-slate-300"></div>
+                
+                <div class="flex gap-4">
+                    <button onclick="simulateSocial('Google')" class="flex-1 border-2 border-slate-100 p-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition"><img src="https://www.google.com/favicon.ico" class="w-5 h-5"> Google</button>
+                    <button onclick="simulateSocial('Facebook')" class="flex-1 border-2 border-slate-100 p-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition"><span class="text-blue-600 font-bold text-xl leading-none">f</span> Facebook</button>
                 </div>
             </div>
 
-            <div id="step-login" class="hidden space-y-4">
-                <p id="login-greet" class="text-indigo-900 font-bold text-xl mb-4"></p>
-                <input id="login-pass" type="password" placeholder="הכנס סיסמה" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none text-center">
-                <button onclick="finishLogin()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold text-lg">התחברות</button>
-                <button onclick="resetAuth()" class="text-xs text-slate-400 underline mt-4">חזור אחורה</button>
-            </div>
-
-            <div id="step-register" class="hidden space-y-4 text-right">
-                <p class="text-center font-bold text-slate-700 mb-2">ברוך הבא! בחר את סוג הפעילות שלך:</p>
-                <div class="flex p-1 bg-slate-100 rounded-2xl mb-6">
-                    <button onclick="updateRole('customer')" id="r-cust" class="role-btn active flex-1 py-2 rounded-xl font-bold text-xs">לקוח</button>
-                    <button onclick="updateRole('hub')" id="r-hub" class="role-btn flex-1 py-2 rounded-xl font-bold text-xs text-slate-500">נקודת קצה</button>
-                    <button onclick="updateRole('vendor')" id="r-vendor" class="role-btn flex-1 py-2 rounded-xl font-bold text-xs text-slate-500">ספק</button>
+            <div id="auth-flow-reg" class="hidden space-y-6 text-right animate-pulse-slow">
+                <p class="text-center font-black text-slate-800 text-lg">נעים להכיר! איזה סוג משתמש אתה?</p>
+                <div class="flex p-2 bg-slate-100 rounded-[2rem] gap-2">
+                    <button onclick="updateRole('customer')" id="pill-customer" class="role-pill active flex-1 py-3 rounded-2xl font-bold text-xs transition-all">לקוח</button>
+                    <button onclick="updateRole('hub')" id="pill-hub" class="role-pill flex-1 py-3 rounded-2xl font-bold text-xs transition-all text-slate-500">נקודת קצה</button>
+                    <button onclick="updateRole('vendor')" id="pill-vendor" class="role-pill flex-1 py-3 rounded-2xl font-bold text-xs transition-all text-slate-500">ספק</button>
                 </div>
                 <div class="space-y-3">
-                    <input id="reg-name" placeholder="שם מלא / שם העסק" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">
+                    <input id="reg-fullname" placeholder="שם מלא / שם העסק" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">
                     <input id="reg-phone" placeholder="מספר טלפון נייד" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">
-                    <div id="role-extra" class="space-y-3"></div>
-                    <input id="reg-pass" type="password" placeholder="בחר סיסמה חזקה" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">
+                    <div id="dynamic-fields" class="space-y-3"></div>
+                    <input id="reg-password" type="password" placeholder="בחר סיסמה מאובטחת" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">
                 </div>
-                <div class="flex items-center gap-2 p-2">
-                    <input type="checkbox" id="reg-agree" class="w-4 h-4">
-                    <label for="reg-agree" class="text-[11px] text-slate-500">קראתי ואני מאשר את <a href="#" class="text-indigo-600 font-bold underline">נהלי המערכת</a></label>
+                <div class="flex items-center gap-3 p-2 bg-indigo-50 rounded-xl">
+                    <input type="checkbox" id="reg-terms" class="w-5 h-5 accent-indigo-600">
+                    <label for="reg-terms" class="text-[11px] text-indigo-900 leading-tight">אני מאשר את תנאי השימוש ב-Locality ומתחייב לפעול לפי נהלי הלוגיסטיקה.</label>
                 </div>
-                <button onclick="finishRegister()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg">סיום והגשת בקשה</button>
+                <button onclick="completeRegistration()" class="w-full bg-indigo-600 text-white py-5 rounded-[2rem] font-black text-xl shadow-xl">הירשם והגש בקשה</button>
             </div>
 
-            <button onclick="toggleContact(true)" class="mt-10 pt-6 border-t border-slate-50 w-full text-xs text-slate-400 font-bold hover:text-indigo-600 transition">צריך עזרה? צור קשר עם המערכת</button>
+            <div id="auth-flow-login" class="hidden space-y-6">
+                <p id="login-welcome-text" class="text-2xl font-black text-indigo-900 italic"></p>
+                <input id="login-pass-input" type="password" placeholder="הזן סיסמה" class="w-full p-5 bg-slate-50 rounded-[2rem] border-2 border-slate-100 text-center outline-none">
+                <button onclick="completeLogin()" class="w-full bg-emerald-500 text-white py-5 rounded-[2rem] font-black text-xl shadow-lg">כניסה מאובטחת</button>
+                <button onclick="location.reload()" class="text-xs text-slate-400 font-bold underline italic">זה לא אני, חזור להתחלה</button>
+            </div>
         </div>
     </div>
 
-    <div id="page-pending" class="page items-center justify-center p-6 text-center">
-        <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl max-w-md border-t-8 border-indigo-600">
-            <span class="text-6xl mb-6 block">🛰️</span>
-            <h2 class="text-3xl font-black mb-4">הבקשה בטיפול</h2>
-            <p class="text-slate-500 font-light mb-8">סוכן האימות שלנו בודק את הנתונים שלך. תקבל אישור כניסה מהאדמין בקרוב.</p>
-            <button onclick="logout()" class="text-indigo-600 font-bold underline">חזרה לדף הבית</button>
-        </div>
+    <div id="page-admin" class="page bg-slate-900 text-white">
+        <nav class="p-8 border-b border-white/10 flex justify-between items-center">
+            <h1 class="text-3xl font-black italic text-indigo-400 tracking-tighter">Locality Orchestrator</h1>
+            <div class="flex gap-4">
+                <button onclick="logout()" class="px-6 py-2 bg-white/10 rounded-full text-xs font-bold border border-white/20 hover:bg-white/20">Sign Out</button>
+            </div>
+        </nav>
+        <main class="max-w-7xl mx-auto p-8 w-full space-y-10">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white/5 p-6 rounded-[2.5rem] border border-white/10">
+                    <div class="text-indigo-400 text-[10px] font-bold uppercase tracking-widest mb-2">סה"כ משתמשים</div>
+                    <div id="adm-stat-total" class="text-4xl font-black">0</div>
+                </div>
+                <div class="bg-white/5 p-6 rounded-[2.5rem] border border-white/10">
+                    <div class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-2">ספקים מאושרים</div>
+                    <div id="adm-stat-vendors" class="text-4xl font-black">0</div>
+                </div>
+                <div class="bg-white/5 p-6 rounded-[2.5rem] border border-white/10">
+                    <div class="text-orange-400 text-[10px] font-bold uppercase tracking-widest mb-2">האבים (נקודות קצה)</div>
+                    <div id="adm-stat-hubs" class="text-4xl font-black">0</div>
+                </div>
+                <div class="bg-indigo-600 p-6 rounded-[2.5rem] shadow-2xl">
+                    <div class="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-2">בקשות לאישור</div>
+                    <div id="adm-stat-pending" class="text-4xl font-black">0</div>
+                </div>
+            </div>
+
+            <div class="bg-white text-slate-900 rounded-[3rem] p-10 shadow-2xl overflow-hidden">
+                <h2 class="text-2xl font-black mb-8 border-b pb-4 flex justify-between">
+                    ניהול רשת הלוגיסטיקה
+                    <span class="text-xs bg-slate-100 px-4 py-1 rounded-full text-slate-400 uppercase font-bold tracking-widest">Live Data</span>
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-50 text-slate-400 font-black text-[10px] uppercase">
+                            <tr>
+                                <th class="p-5">שם / עסק</th>
+                                <th class="p-5">אימייל</th>
+                                <th class="p-5">תפקיד</th>
+                                <th class="p-5">סטטוס</th>
+                                <th class="p-5 text-left">פעולות אדמין</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
     <div id="page-customer" class="page bg-white">
-        <nav class="bg-indigo-900 text-white p-5 flex justify-between items-center shadow-xl">
+        <nav class="bg-indigo-900 text-white p-6 sticky top-0 flex justify-between items-center shadow-2xl">
             <h1 class="text-2xl font-black italic text-emerald-400">LOCALITY</h1>
-            <div class="flex items-center gap-4">
-                <span id="cust-welcome" class="text-sm font-bold border-r pr-4 border-white/20"></span>
-                <button onclick="logout()" class="bg-white/10 px-3 py-1 rounded-lg text-xs hover:bg-white/20">התנתק</button>
+            <div class="flex items-center gap-6">
+                <span id="cust-welcome-label" class="text-sm font-bold opacity-80 border-r pr-6 border-white/20"></span>
+                <button onclick="logout()" class="text-xs bg-white/10 px-4 py-2 rounded-xl">התנתק</button>
             </div>
         </nav>
-        <main class="max-w-6xl mx-auto p-6 flex-1 w-full space-y-8">
+        <main class="max-w-6xl mx-auto p-6 w-full space-y-10 flex-1">
             <div id="map" class="shadow-2xl"></div>
-            <div class="bg-slate-50 p-12 rounded-[3.5rem] text-center border border-slate-100">
-                <h2 class="text-3xl font-black text-indigo-900">שלום, <span id="cust-name-span"></span>!</h2>
-                <p class="text-slate-500 mt-2 italic font-light">המערכת מאתרת עבורך נקודות איסוף פעילות סביבך.</p>
+            <div class="bg-slate-50 p-16 rounded-[4rem] text-center border border-slate-100">
+                <h2 class="text-4xl font-black text-indigo-900 mb-4">ברוך הבא, <span id="cust-name-val"></span></h2>
+                <p class="text-slate-400 italic text-lg font-light italic leading-relaxed">סוכן חוויית הלקוח שלך איתר את נקודות האיסוף הזמינות עבורך כרגע.</p>
             </div>
         </main>
-    </div>
-
-    <div id="page-admin" class="page bg-slate-100">
-        <nav class="bg-slate-900 text-white p-6 sticky top-0 flex justify-between items-center shadow-2xl">
-            <div class="flex items-center gap-4">
-                <span class="text-2xl">👑</span>
-                <h1 class="text-xl font-black italic tracking-tighter uppercase text-indigo-400">Orchestrator Control</h1>
-            </div>
-            <button onclick="logout()" class="bg-white/10 px-6 py-2 rounded-xl text-xs font-bold border border-white/10">Log Out</button>
-        </nav>
-        <main class="max-w-7xl mx-auto p-8 flex-1 w-full space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
-                    <h2 class="text-xl font-bold mb-6 flex justify-between items-center">
-                        ניהול משתמשים כללי
-                        <span id="user-count-badge" class="bg-indigo-100 text-indigo-600 text-xs px-3 py-1 rounded-full">0 משתמשים</span>
-                    </h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right text-sm">
-                            <thead class="bg-slate-50 text-slate-400 uppercase text-[10px] font-bold">
-                                <tr>
-                                    <th class="p-4">שם / עסק</th>
-                                    <th class="p-4">אימייל</th>
-                                    <th class="p-4">תפקיד</th>
-                                    <th class="p-4">סטטוס</th>
-                                    <th class="p-4">פעולות</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-table-body">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="bg-indigo-900 text-white p-8 rounded-[2.5rem] shadow-2xl">
-                    <h3 class="font-bold mb-4 border-b border-white/10 pb-2">הודעות מערכת</h3>
-                    <div id="admin-alerts" class="space-y-4 text-xs font-light">
-                        </div>
-                </div>
-            </div>
-        </main>
+        <footer id="footer-cust"></footer>
     </div>
 
     <div id="modal-contact" class="modal">
-        <div class="bg-white p-10 rounded-[3.5rem] w-full max-w-lg shadow-2xl relative">
-            <button onclick="toggleContact(false)" class="absolute top-8 left-8 text-3xl text-slate-300 hover:text-red-500">&times;</button>
-            <h2 class="text-3xl font-black mb-2 italic">צור קשר</h2>
-            <p class="text-slate-400 mb-8 text-sm">פנייה ישירה למטה Locality</p>
+        <div class="bg-white p-12 rounded-[4rem] w-full max-w-lg shadow-2xl relative">
+            <button onclick="toggleContact(false)" class="absolute top-10 left-10 text-4xl text-slate-300 hover:text-red-500 transition-colors">&times;</button>
+            <h2 class="text-3xl font-black mb-2 italic">צור קשר עם המטה</h2>
+            <p class="text-slate-400 mb-10 text-sm">פנייה ישירה לצוות הסוכנים של Locality</p>
             <div class="space-y-4">
-                <input id="c-name" placeholder="שם מלא" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-100 focus:ring-indigo-500">
-                <input id="c-phone" placeholder="טלפון נייד" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-100 focus:ring-indigo-500">
-                <input id="c-email" placeholder="אימייל לחזרה" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-100 focus:ring-indigo-500">
-                <textarea id="c-msg" placeholder="מה בלב שלך?" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-100 focus:ring-indigo-500 h-32"></textarea>
-                <button onclick="sendContact()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-indigo-700 transition">שלח פנייה לסוכנים</button>
+                <input id="c-name" placeholder="שם מלא" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500">
+                <input id="c-phone" placeholder="נייד ליצירת קשר" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500">
+                <textarea id="c-message" placeholder="פירוט הפנייה..." class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500 h-32"></textarea>
+                <button onclick="sendContactMsg()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition">שלח הודעה</button>
             </div>
         </div>
     </div>
 
+    <template id="vision-template">
+        <div class="bg-slate-900 text-white py-24 px-8 mt-20 w-full">
+            <div class="max-w-6xl mx-auto text-center space-y-12">
+                <h4 class="text-emerald-400 font-bold uppercase tracking-[0.4em] text-[10px]">The Locality Vision</h4>
+                <p class="text-3xl md:text-5xl font-light italic leading-tight text-slate-200">
+                    "לחבר בין ספקים, נקודות קצה וצרכנים כדי ליצור <span class="text-indigo-400 font-black">רשת לוגיסטית שיתופית</span> מקומית המבוססת על אמון ויעילות."
+                </p>
+                <div class="pt-12 border-t border-white/5 text-[10px] text-slate-600 uppercase tracking-widest">
+                    Locality HQ © 2026 | Powered by Agent Orchestration
+                </div>
+            </div>
+        </div>
+    </template>
+
     <script>
-        // Database Init
-        let users = JSON.parse(localStorage.getItem('locality_db_v13')) || [];
+        // Database Core
+        let db = JSON.parse(localStorage.getItem('locality_db_v14')) || [];
         let currentRole = 'customer';
-        let tempEmail = '';
+        let authEmail = '';
 
-        // 1. Identification Flow
-        function checkIdentity() {
-            tempEmail = document.getElementById('id-email').value;
-            if(!tempEmail.includes('@')) return alert("נא להזין אימייל חוקי");
+        // IDENTITY FLOW
+        function processIdentity() {
+            authEmail = document.getElementById('input-email').value;
+            if(!authEmail.includes('@')) return alert("נא להזין אימייל תקין.");
 
-            const existingUser = users.find(u => u.email === tempEmail);
-            document.getElementById('step-id').classList.add('hidden');
+            const user = db.find(u => u.email === authEmail);
+            document.getElementById('auth-flow-id').classList.add('hidden');
 
-            if(existingUser) {
-                document.getElementById('step-login').classList.remove('hidden');
-                document.getElementById('login-greet').innerText = `שלום שוב, ${existingUser.name}!`;
+            if(user) {
+                document.getElementById('auth-flow-login').classList.remove('hidden');
+                document.getElementById('login-welcome-text').innerText = `שלום שוב, ${user.name}!`;
             } else {
-                document.getElementById('step-register').classList.remove('hidden');
+                document.getElementById('auth-flow-reg').classList.remove('hidden');
                 updateRole('customer');
             }
         }
 
-        // 2. Registration Flow
         function updateRole(role) {
             currentRole = role;
-            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active', 'text-indigo-600'));
-            document.getElementById(`r-${role}`).classList.add('active', 'text-indigo-600');
+            document.querySelectorAll('.role-pill').forEach(b => b.classList.remove('active', 'text-indigo-600'));
+            document.getElementById(`pill-${role}`).classList.add('active');
             
-            const extra = document.getElementById('role-extra');
-            extra.innerHTML = '';
-            if(role === 'vendor') extra.innerHTML = '<input id="reg-biz" placeholder="ח.פ / עוסק מורשה" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">';
-            if(role === 'hub') extra.innerHTML = '<input id="reg-addr" placeholder="כתובת הנקודה" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none"><input id="reg-cap" type="number" placeholder="קיבולת חבילות מקסימלית" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">';
+            const fields = document.getElementById('dynamic-fields');
+            fields.innerHTML = '';
+            if(role === 'vendor') fields.innerHTML = '<input id="reg-bizid" placeholder="ח.פ / עוסק מורשה" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-indigo-500">';
+            if(role === 'hub') fields.innerHTML = '<input id="reg-addr" placeholder="כתובת הנקודה" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-indigo-500"><input id="reg-cap" type="number" placeholder="קיבולת חבילות" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-indigo-500">';
         }
 
-        function finishRegister() {
-            const name = document.getElementById('reg-name').value;
-            const pass = document.getElementById('reg-pass').value;
-            const agree = document.getElementById('reg-agree').checked;
-            if(!name || pass.length < 4 || !agree) return alert("נא למלא את כל השדות, סיסמה חזקה ולאשר את הנהלים.");
+        function completeRegistration() {
+            const name = document.getElementById('reg-fullname').value;
+            const pass = document.getElementById('reg-password').value;
+            const terms = document.getElementById('reg-terms').checked;
+            if(!name || pass.length < 5 || !terms) return alert("נא למלא את כל השדות, סיסמה חזקה ולאשר תנאים.");
 
             const newUser = {
                 id: Date.now(),
                 name,
-                email: tempEmail,
+                email: authEmail,
                 pass,
                 role: currentRole,
                 status: currentRole === 'customer' ? 'approved' : 'pending',
                 joined: new Date().toLocaleDateString()
             };
 
-            users.push(newUser);
-            localStorage.setItem('locality_db_v13', JSON.stringify(users));
-            
-            if(newUser.status === 'pending') showPage('page-pending');
-            else { localStorage.setItem('locality_session', JSON.stringify(newUser)); showPage('page-customer'); }
+            db.push(newUser);
+            localStorage.setItem('locality_db_v14', JSON.stringify(db));
+            alert("הרישום בוצע! " + (newUser.status === 'pending' ? "הבקשה הועברה לאישור אדמין." : "ברוך הבא לזירה."));
+            location.reload();
         }
 
-        // 3. Login Flow
-        function finishLogin() {
-            const pass = document.getElementById('login-pass').value;
-            const user = users.find(u => u.email === tempEmail && u.pass === pass);
+        function completeLogin() {
+            const pass = document.getElementById('login-pass-input').value;
+            const user = db.find(u => u.email === authEmail && u.pass === pass);
             
-            if(!user) return alert("סיסמה שגויה");
-            if(user.status === 'pending') return showPage('page-pending');
+            if(!user) return alert("סיסמה שגויה.");
+            if(user.status === 'pending') return alert("החשבון עדיין ממתין לאישור אדמין.");
             
             localStorage.setItem('locality_session', JSON.stringify(user));
-            showPage('page-customer');
+            renderDashboard(user);
         }
 
-        // 4. Admin Orchestrator
-        function adminEntry() {
-            if(prompt("Admin Key:") === "1234") {
-                showPage('page-admin');
-                renderAdmin();
+        // DASHBOARD LOGIC
+        function renderDashboard(user) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-customer').classList.add('active');
+            document.getElementById('cust-welcome-label').innerText = user.email;
+            document.getElementById('cust-name-val').innerText = user.name;
+            
+            const footer = document.getElementById('footer-cust');
+            if(!footer.innerHTML) footer.appendChild(document.getElementById('vision-template').content.cloneNode(true));
+            
+            initMap();
+        }
+
+        // ADMIN ORCHESTRATOR
+        function adminQuickEntry() {
+            if(prompt("Admin Access Key:") === "1234") {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('page-admin').classList.add('active');
+                renderAdminUI();
             }
         }
 
-        function renderAdmin() {
-            const tbody = document.getElementById('admin-table-body');
-            const alerts = document.getElementById('admin-alerts');
-            document.getElementById('user-count-badge').innerText = `${users.length} משתמשים`;
+        function renderAdminUI() {
+            const body = document.getElementById('admin-table-body');
+            document.getElementById('adm-stat-total').innerText = db.length;
+            document.getElementById('adm-stat-vendors').innerText = db.filter(u => u.role === 'vendor' && u.status === 'approved').length;
+            document.getElementById('adm-stat-hubs').innerText = db.filter(u => u.role === 'hub' && u.status === 'approved').length;
+            document.getElementById('adm-stat-pending').innerText = db.filter(u => u.status === 'pending').length;
 
-            tbody.innerHTML = users.map(u => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-4 font-bold text-indigo-900">${u.name}</td>
-                    <td class="p-4 text-slate-500">${u.email}</td>
-                    <td class="p-4"><span class="text-[10px] bg-slate-100 px-2 py-1 rounded font-bold">${u.role.toUpperCase()}</span></td>
-                    <td class="p-4"><span class="px-3 py-1 rounded-full text-[10px] font-bold ${u.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${u.status}</span></td>
-                    <td class="p-4 flex gap-2">
-                        ${u.status === 'pending' ? `<button onclick="approveUser(${u.id})" class="text-indigo-600 font-bold hover:underline">אשר</button>` : ''}
+            body.innerHTML = db.map(u => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-5 font-bold text-indigo-900">${u.name}</td>
+                    <td class="p-5 text-slate-400">${u.email}</td>
+                    <td class="p-5"><span class="text-[10px] bg-indigo-50 px-3 py-1 rounded-full font-bold">${u.role.toUpperCase()}</span></td>
+                    <td class="p-5"><span class="px-3 py-1 rounded-full text-[10px] font-bold ${u.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}">${u.status}</span></td>
+                    <td class="p-5 text-left">
+                        ${u.status === 'pending' ? `<button onclick="approveUser(${u.id})" class="text-indigo-600 font-bold hover:underline ml-4">אשר</button>` : ''}
                         <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-600">מחק</button>
                     </td>
                 </tr>
             `).join('');
-
-            const pending = users.filter(u => u.status === 'pending');
-            alerts.innerHTML = pending.length ? pending.map(u => `<div class="p-3 bg-white/5 rounded-xl border border-white/10">🔹 בקשת הצטרפות מ<b>${u.name}</b> (${u.role})</div>`).join('') : 'אין התראות חדשות';
         }
 
         function approveUser(id) {
-            users.find(u => u.id === id).status = 'approved';
-            localStorage.setItem('locality_db_v13', JSON.stringify(users));
-            renderAdmin();
+            db.find(u => u.id === id).status = 'approved';
+            localStorage.setItem('locality_db_v14', JSON.stringify(db));
+            renderAdminUI();
         }
 
         function deleteUser(id) {
-            if(confirm("למחוק משתמש זה לצמיתות?")) {
-                users = users.filter(u => u.id !== id);
-                localStorage.setItem('locality_db_v13', JSON.stringify(users));
-                renderAdmin();
+            if(confirm("למחוק משתמש זה?")) {
+                db = db.filter(u => u.id !== id);
+                localStorage.setItem('locality_db_v14', JSON.stringify(db));
+                renderAdminUI();
             }
         }
 
-        // Global Helpers
-        function showPage(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'page-customer') {
-                const u = JSON.parse(localStorage.getItem('locality_session'));
-                document.getElementById('cust-welcome').innerText = u.email;
-                document.getElementById('cust-name-span').innerText = u.name;
-                initMap();
-            }
-            window.scrollTo(0,0);
-        }
-
+        // HELPERS
         function initMap() {
             setTimeout(() => {
                 const m = L.map('map').setView([32.07, 34.77], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
-            }, 300);
+            }, 400);
         }
-
-        function resetAuth() { location.reload(); }
-        function logout() { localStorage.removeItem('locality_session'); location.reload(); }
         function toggleContact(show) { document.getElementById('modal-contact').classList.toggle('active', show); }
-        function sendContact() { alert("הפנייה נשלחה לסוכנים! נחזור אליך בהקדם."); toggleContact(false); }
+        function sendContactMsg() { alert("הפנייה נשלחה! סוכן האופרציה יחזור אליך בקרוב."); toggleContact(false); }
+        function logout() { localStorage.removeItem('locality_session'); location.reload(); }
+        function simulateSocial(p) { alert(`סימולציה: מתחבר עם ${p}...`); }
 
         window.onload = () => {
-            const session = localStorage.getItem('locality_session');
-            if(session) showPage('page-customer');
+            const s = localStorage.getItem('locality_session');
+            if(s) renderDashboard(JSON.parse(s));
         };
     </script>
 </body>
