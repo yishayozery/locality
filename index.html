@@ -3,19 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locality - נקודות איסוף</title>
+    <title>Locality - ניהול נקודות איסוף</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
-        .container { background: white; padding: 40px; border-radius: 15px; shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
-        h1 { color: #2563eb; }
-        button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>ברוכים הבאים ל-Locality</h1>
-        <p>מערכת ניהול נקודות איסוף חכמה</p>
-        <button>מצא נקודה קרובה</button>
+<body class="bg-gray-100 min-h-screen text-gray-900">
+
+    <nav class="bg-blue-700 text-white shadow-md p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-extrabold tracking-tight">LOCALITY</h1>
+            <button onclick="toggleModal()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg font-bold transition-all shadow-lg transform hover:scale-105">
+                + הוסף נקודה חדשה
+            </button>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">לוח בקרה לוגיסטי</h2>
+        <div id="points-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </main>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl overflow-hidden relative">
+            <h2 class="text-2xl font-bold mb-4">הוספת נקודת איסוף</h2>
+            <div class="space-y-4">
+                <input id="nameInput" type="text" placeholder="שם הנקודה (למשל: הקיוסק של משה)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <input id="addressInput" type="text" placeholder="כתובת מלאה" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <input id="hoursInput" type="text" placeholder="שעות פעילות" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <div class="flex gap-2">
+                    <button onclick="savePoint()" class="bg-blue-600 text-white flex-1 py-3 rounded-xl font-bold hover:bg-blue-700 transition">שמור נקודה</button>
+                    <button onclick="toggleModal()" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-300">ביטול</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        let points = JSON.parse(localStorage.getItem('locality_points')) || [
+            { id: 1, name: "הפיצוציה של דני", address: "אבן גבירול 42, תל אביב", hours: "08:00 - 23:00" },
+            { id: 2, name: "מרכז קהילתי יפו", address: "יפו 101, ירושלים", hours: "09:00 - 18:00" }
+        ];
+
+        function renderPoints() {
+            const container = document.getElementById('points-container');
+            container.innerHTML = points.map(p => `
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition">
+                    <h3 class="text-xl font-bold text-blue-800">${p.name}</h3>
+                    <p class="text-gray-500 text-sm mt-1">${p.address}</p>
+                    <div class="mt-4 flex items-center justify-between">
+                        <span class="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-full">${p.hours}</span>
+                        <span class="text-green-500 text-xs font-bold">פעיל ●</span>
+                    </div>
+                </div>
+            `).join('');
+            localStorage.setItem('locality_points', JSON.stringify(points));
+        }
+
+        function toggleModal() {
+            document.getElementById('modal').classList.toggle('hidden');
+        }
+
+        function savePoint() {
+            const name = document.getElementById('nameInput').value;
+            const address = document.getElementById('addressInput').value;
+            const hours = document.getElementById('hoursInput').value;
+
+            if (name && address) {
+                points.push({ id: Date.now(), name, address, hours });
+                renderPoints();
+                toggleModal();
+                // Clear inputs
+                document.getElementById('nameInput').value = '';
+                document.getElementById('addressInput').value = '';
+                document.getElementById('hoursInput').value = '';
+            } else {
+                alert("אנא מלא שם וכתובת");
+            }
+        }
+
+        renderPoints();
+    </script>
 </body>
 </html>
