@@ -3,119 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locality - Pro Ecosystem</title>
+    <title>Locality - Enterprise</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
-        body { font-family: 'Assistant', sans-serif; scroll-behavior: smooth; }
-        .page { display: none; min-height: 100vh; flex-direction: column; }
-        .page.active { display: flex; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Fix for Map covering Header */
-        #map, #admin-map { z-index: 1 !important; }
-        nav { z-index: 1000 !important; }
-        .role-btn.active { background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: #4338ca; }
-        .content-container { max-width: 1200px; margin: 0 auto; width: 100%; }
-        .social-btn { transition: all 0.2s; border: 1px solid #e2e8f0; }
-        .social-btn:hover { background: #f8fafc; transform: translateY(-2px); }
+        body { font-family: 'Assistant', sans-serif; overflow-x: hidden; }
+        .page { display: none; min-height: 100vh; }
+        .page.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        nav { z-index: 1000 !important; position: sticky; top: 0; }
+        #map { z-index: 1 !important; height: 350px; border-radius: 2rem; }
+        .role-btn.active { background: white; color: #4338ca; shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Desktop optimization for no-scroll */
+        @media (min-width: 1024px) { #page-auth .auth-card { margin-top: -5vh; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
 
-    <div id="page-auth" class="page active items-center justify-center p-4 py-12">
-        <div class="bg-white p-8 md:p-12 rounded-[3rem] shadow-2xl w-full max-w-lg border border-slate-100 text-center relative">
-            <button onclick="adminLogin()" class="absolute top-8 left-8 text-[9px] text-slate-300 hover:text-indigo-500 font-bold tracking-widest uppercase">Admin</button>
-            <h1 class="text-5xl font-black text-indigo-900 tracking-tighter mb-2 italic">LOCALITY</h1>
-            <p class="text-slate-400 text-sm mb-8">ברוכים הבאים לזירה הלוגיסטית</p>
+    <div id="page-auth" class="page active items-center justify-center p-4">
+        <div class="auth-card bg-white p-6 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-lg border border-slate-100 text-center relative">
+            <button onclick="adminLogin()" class="absolute top-6 left-6 text-[9px] text-slate-300 hover:text-indigo-500 font-bold uppercase tracking-widest">Admin</button>
             
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <button class="social-btn p-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold">
-                    <img src="https://www.google.com/favicon.ico" class="w-4 h-4"> Google
+            <h1 class="text-4xl font-black text-indigo-900 tracking-tighter mb-1 italic">LOCALITY</h1>
+            <p class="text-slate-400 text-xs mb-6">הזירה הלוגיסטית השיתופית</p>
+            
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="socialAuth('Google')" class="border p-2 rounded-xl flex items-center justify-center gap-2 text-xs font-bold hover:bg-slate-50 transition">
+                    <img src="https://www.google.com/favicon.ico" class="w-3 h-3"> Google
                 </button>
-                <button class="social-btn p-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold">
-                    <span class="text-blue-600 text-lg">f</span> Facebook
+                <button onclick="socialAuth('Facebook')" class="border p-2 rounded-xl flex items-center justify-center gap-2 text-xs font-bold hover:bg-slate-50 transition">
+                    <span class="text-blue-600 font-black">f</span> Facebook
                 </button>
             </div>
-            
-            <div class="flex items-center gap-2 mb-6 opacity-30"><hr class="flex-1"><span>או</span><hr class="flex-1"></div>
 
-            <div class="flex p-1 bg-slate-100 rounded-2xl mb-6">
-                <button onclick="setRole('customer')" id="btn-customer" class="role-btn active flex-1 py-3 rounded-xl font-bold text-xs transition">לקוח</button>
-                <button onclick="setRole('hub')" id="btn-hub" class="role-btn flex-1 py-3 rounded-xl font-bold text-xs transition text-slate-500">נקודת קצה</button>
-                <button onclick="setRole('vendor')" id="btn-vendor" class="role-btn flex-1 py-3 rounded-xl font-bold text-xs transition text-slate-500">ספק</button>
+            <div class="flex p-1 bg-slate-100 rounded-xl mb-6">
+                <button onclick="setRole('customer')" id="btn-customer" class="role-btn active flex-1 py-2 rounded-lg font-bold text-[11px] transition">לקוח</button>
+                <button onclick="setRole('hub')" id="btn-hub" class="role-btn flex-1 py-2 rounded-lg font-bold text-[11px] transition text-slate-500">נקודת קצה</button>
+                <button onclick="setRole('vendor')" id="btn-vendor" class="role-btn flex-1 py-2 rounded-lg font-bold text-[11px] transition text-slate-500">ספק</button>
             </div>
 
-            <div id="auth-fields" class="space-y-3 mb-8 text-right">
-                <input id="reg-email" type="email" placeholder="אימייל" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none focus:ring-2 focus:ring-indigo-500">
-                <input id="reg-pass" type="password" placeholder="סיסמה" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none focus:ring-2 focus:ring-indigo-500">
+            <div id="auth-fields" class="space-y-3 mb-6">
+                <input id="reg-email" type="email" placeholder="אימייל" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:border-indigo-500 text-sm">
                 <div id="extra-fields" class="space-y-3"></div>
             </div>
             
-            <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-indigo-700 transition-all active:scale-95">המשך</button>
+            <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-md shadow-lg hover:bg-indigo-700 transition active:scale-95">כניסה / הרשמה</button>
             
-            <div class="mt-10 pt-6 border-t border-slate-50">
-                <p class="text-xs text-slate-400">נתקלת בבעיה? <button onclick="scrollToContact()" class="text-indigo-600 font-bold underline">צור קשר עם התמיכה</button></p>
-            </div>
+            <button onclick="scrollToContact()" class="mt-4 text-[10px] text-indigo-600 font-bold underline">צור קשר עם התמיכה</button>
         </div>
-        <footer class="vision-footer-container w-full"></footer>
     </div>
 
-    <div id="page-pending" class="page items-center justify-center text-center p-6">
-        <div class="bg-white p-12 rounded-[3rem] shadow-xl max-w-md border-t-8 border-indigo-500">
-            <h2 class="text-3xl font-black mb-4">הבקשה נשלחה!</h2>
-            <p class="text-slate-500 mb-8 italic">סוכן ה-QA שלנו בודק את תקינות הנתונים. הודעה תשלח אליך בקרוב.</p>
+    <div id="page-pending" class="page items-center justify-center p-6">
+        <div class="bg-white p-10 rounded-[3rem] shadow-xl max-w-md text-center border-t-8 border-indigo-500">
+            <h2 class="text-2xl font-bold mb-4 italic">הבקשה בבדיקת QA</h2>
+            <p class="text-slate-500 mb-8 text-sm">אנחנו מוודאים את נתוני העסק שלך. תקבל אישור תוך 24 שעות.</p>
             <button onclick="logout()" class="text-indigo-600 font-bold underline">חזרה</button>
         </div>
     </div>
 
     <div id="page-customer" class="page">
-        <nav class="bg-indigo-900 text-white p-4 sticky top-0 shadow-2xl">
-            <div class="content-container flex justify-between items-center">
-                <h1 class="text-2xl font-black text-emerald-400">LOCALITY</h1>
-                <button onclick="logout()" class="text-xs opacity-60">התנתק</button>
+        <nav class="bg-indigo-900 text-white p-4 shadow-xl">
+            <div class="max-w-6xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-black text-emerald-400 italic">LOCALITY</h1>
+                <button onclick="logout()" class="text-[10px] bg-white/10 px-3 py-1 rounded-lg">התנתק</button>
             </div>
         </nav>
-        <main class="content-container p-6 flex-1">
-            <div id="map" class="h-96 w-full rounded-[2.5rem] shadow-lg border-4 border-white mb-8"></div>
-            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 text-center">
-                <h3 class="text-2xl font-bold mb-2">שלום, <span id="cust-name-display">אורח</span></h3>
-                <p class="text-slate-400">בחר נקודת איסוף כדי לצפות במוצרים הזמינים</p>
+        <main class="max-w-6xl mx-auto p-4 w-full flex-1">
+            <div id="map" class="mb-6 shadow-lg border-4 border-white"></div>
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border text-center">
+                <h3 class="text-xl font-bold mb-2">שלום, <span id="display-name">אורח</span></h3>
+                <p class="text-slate-400 text-sm">המפה מציגה נקודות איסוף פעילות סביבך</p>
             </div>
         </main>
-        <footer class="vision-footer-container"></footer>
+        <div id="footer-container-cust"></div>
     </div>
 
     <div id="page-admin" class="page">
-        <nav class="bg-slate-900 text-white p-6 sticky top-0"><div class="content-container flex justify-between items-center"><h1 class="font-black">ADMIN VIEW</h1><button onclick="logout()">יציאה</button></div></nav>
-        <main class="content-container p-6 flex-1">
-            <div class="bg-white p-8 rounded-3xl shadow-sm border mb-6">
-                <h2 class="text-xl font-bold mb-4">בקשות ממתינות לאישור</h2>
-                <div id="admin-list" class="space-y-4"></div>
+        <nav class="bg-slate-900 text-white p-4"><div class="max-w-6xl mx-auto flex justify-between"><b>ADMIN PANEL</b><button onclick="logout()">יציאה</button></div></nav>
+        <main class="max-w-6xl mx-auto p-6 w-full flex-1">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                <h2 class="font-bold mb-4 border-b pb-2">בקשות ממתינות</h2>
+                <div id="admin-list" class="space-y-3"></div>
             </div>
         </main>
-        <footer class="vision-footer-container"></footer>
+        <div id="footer-container-admin"></div>
     </div>
 
     <template id="vision-template">
-        <div id="contact-section" class="bg-slate-900 text-white py-24 px-6 mt-20 w-full">
-            <div class="content-container grid md:grid-cols-2 gap-16 items-center">
+        <div id="contact-section" class="bg-slate-900 text-white py-16 px-6 w-full">
+            <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-10">
                 <div class="text-right">
-                    <h4 class="text-emerald-400 font-bold uppercase tracking-widest text-xs mb-6 font-bold">Contact Us</h4>
-                    <h3 class="text-4xl font-black mb-6 italic">דבר איתנו</h3>
-                    <div class="space-y-4">
-                        <input placeholder="שם מלא" class="w-full p-4 bg-white/5 rounded-xl border border-white/10 outline-none focus:border-emerald-400">
-                        <textarea placeholder="איך נוכל לעזור?" class="w-full p-4 bg-white/5 rounded-xl border border-white/10 outline-none h-32 focus:border-emerald-400"></textarea>
-                        <button class="bg-emerald-500 text-indigo-900 font-bold py-4 px-10 rounded-xl hover:bg-emerald-400 transition">שלח הודעה</button>
-                    </div>
+                    <h4 class="text-emerald-400 font-bold text-[10px] uppercase mb-4 tracking-widest">Contact</h4>
+                    <h3 class="text-2xl font-bold mb-4 italic italic">צור קשר</h3>
+                    <input placeholder="שם" class="w-full p-3 bg-white/5 rounded-xl border border-white/10 mb-2 outline-none">
+                    <button class="bg-emerald-500 text-indigo-900 font-bold py-2 px-6 rounded-xl text-sm">שלח</button>
                 </div>
-                <div class="text-center md:text-right border-r border-white/10 pr-10">
-                    <h4 class="text-emerald-400 font-bold uppercase tracking-widest text-[10px] mb-6 font-bold">Our Vision</h4>
-                    <p class="text-2xl font-light italic leading-relaxed text-slate-300">
-                        "לחבר בין ספקים, נקודות קצה וצרכנים ליצירת <span class="text-indigo-400 font-bold">רשת לוגיסטית שיתופית</span> מקומית ויעילה."
-                    </p>
-                    <div class="mt-12 text-[10px] text-slate-600 tracking-widest uppercase">Locality Ecosystem © 2026</div>
+                <div class="border-r border-white/10 pr-6">
+                    <h4 class="text-emerald-400 font-bold text-[10px] uppercase mb-4 tracking-widest">Our Vision</h4>
+                    <p class="text-lg font-light italic text-slate-300 leading-relaxed">"יצירת רשת לוגיסטית שיתופית שמחברת בין אנשים לעסקים מקומיים."</p>
                 </div>
             </div>
         </div>
@@ -127,22 +114,23 @@
 
         function setRole(role) {
             currentRole = role;
-            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active', 'text-indigo-600'));
+            document.querySelectorAll('.role-btn').forEach(b => {
+                b.classList.remove('active', 'text-indigo-600');
+                b.classList.add('text-slate-500');
+            });
             document.getElementById(`btn-${role}`).classList.add('active', 'text-indigo-600');
+            
             const extra = document.getElementById('extra-fields');
             extra.innerHTML = '';
-            
-            if(role === 'vendor') {
-                extra.innerHTML = `
-                    <input id="v-biz" placeholder="שם העסק" class="w-full p-4 bg-slate-50 rounded-2xl outline-none">
-                    <input id="v-id" placeholder="ח.פ / עוסק" class="w-full p-4 bg-slate-50 rounded-2xl outline-none">
-                    <input id="v-fleet" placeholder="סוג צי רכב (אופנועים/רכבים/אין)" class="w-full p-4 bg-slate-50 rounded-2xl outline-none">
-                `;
-            } else if(role === 'hub') {
-                extra.innerHTML = `
-                    <input id="h-addr" placeholder="כתובת מדויקת" class="w-full p-4 bg-slate-50 rounded-2xl outline-none">
-                    <input id="h-cap" type="number" placeholder="נפח אחסון פנוי (בליטרים/חבילות)" class="w-full p-4 bg-slate-50 rounded-2xl outline-none">
-                `;
+            if(role === 'vendor') extra.innerHTML = '<input id="v-biz" placeholder="שם העסק" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none text-sm">';
+            if(role === 'hub') extra.innerHTML = '<input id="h-addr" placeholder="כתובת" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 outline-none text-sm">';
+        }
+
+        function socialAuth(provider) {
+            const email = prompt(`התחברות עם ${provider}. הזן אימייל:`);
+            if(email) {
+                document.getElementById('reg-email').value = email;
+                handleAuth();
             }
         }
 
@@ -150,24 +138,68 @@
             const email = document.getElementById('reg-email').value;
             if(!email) return alert("נא להזין אימייל");
             
-            const newUser = {
-                id: Date.now(),
-                email,
-                role: currentRole,
-                status: currentRole === 'customer' ? 'approved' : 'pending',
-                name: email.split('@')[0]
-            };
-            
-            users.push(newUser);
+            const user = { id: Date.now(), email, role: currentRole, status: currentRole === 'customer' ? 'approved' : 'pending' };
+            users.push(user);
             localStorage.setItem('locality_db', JSON.stringify(users));
             
-            if(newUser.status === 'pending') {
-                showPage('page-pending');
-            } else {
-                localStorage.setItem('locality_session', JSON.stringify(newUser));
-                showPage('page-customer');
-            }
+            if(user.status === 'pending') showPage('page-pending');
+            else { localStorage.setItem('locality_session', JSON.stringify(user)); showPage('page-customer'); }
         }
 
         function adminLogin() {
-            if(prompt("Admin Access Key
+            if(prompt("Admin Key:") === "1234") { showPage('page-admin'); renderAdmin(); }
+        }
+
+        function renderAdmin() {
+            const list = document.getElementById('admin-list');
+            const pending = users.filter(u => u.status === 'pending');
+            list.innerHTML = pending.length ? pending.map(u => `
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border text-sm">
+                    <div><b>${u.email}</b> (${u.role})</div>
+                    <button onclick="approve(${u.id})" class="bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-[10px]">אשר</button>
+                </div>
+            `).join('') : '<p class="text-center text-slate-400 italic text-xs">אין בקשות</p>';
+        }
+
+        function approve(id) {
+            users.find(u => u.id === id).status = 'approved';
+            localStorage.setItem('locality_db', JSON.stringify(users));
+            renderAdmin();
+        }
+
+        function logout() { localStorage.removeItem('locality_session'); location.reload(); }
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const p = document.getElementById(id);
+            p.classList.add('active');
+            
+            const containers = ['footer-container-cust', 'footer-container-admin'];
+            containers.forEach(cId => {
+                const c = document.getElementById(cId);
+                if(c && !c.innerHTML) c.appendChild(document.getElementById('vision-template').content.cloneNode(true));
+            });
+            
+            if(id === 'page-customer') {
+                document.getElementById('display-name').innerText = JSON.parse(localStorage.getItem('locality_session')).email.split('@')[0];
+                initMap();
+            }
+        }
+
+        function initMap() {
+            setTimeout(() => {
+                const m = L.map('map').setView([32.07, 34.77], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(m);
+            }, 300);
+        }
+
+        function scrollToContact() { document.getElementById('contact-section')?.scrollIntoView({ behavior: 'smooth' }); }
+
+        window.onload = () => {
+            const s = localStorage.getItem('locality_session');
+            if(s) showPage('page-customer');
+            setRole('customer');
+        };
+    </script>
+</body>
+</html>
