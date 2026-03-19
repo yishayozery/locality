@@ -3,213 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locality - Precision System</title>
+    <title>Locality Live - Connected System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
-        body { font-family: 'Assistant', sans-serif; background: #f8fafc; color: #0f172a; }
+        body { font-family: 'Assistant', sans-serif; background: #f4f7fa; color: #1e293b; overflow-x: hidden; }
         .page { display: none; min-height: 100vh; flex-direction: column; }
-        .page.active { display: flex; }
-        .card { background: white; padding: 2.5rem; border-radius: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08); width: 100%; max-width: 550px; }
-        input, select, textarea { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px; outline: none; font-size: 15px; background: #fcfdfe; }
-        input:focus { border-color: #4f46e5; ring: 3px rgba(79, 70, 229, 0.1); }
-        label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; margin-right: 4px; text-transform: uppercase; }
-        .btn-main { background: #4f46e5; color: white; padding: 16px; border-radius: 16px; font-weight: 800; width: 100%; transition: 0.2s; }
+        .page.active { display: flex; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: white; padding: 2.5rem; border-radius: 3rem; shadow: 0 25px 50px -12px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; outline: none; transition: 0.2s; background: #fff; }
+        input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 4px; margin-right: 4px; }
+        
+        .role-card { cursor: pointer; border: 2px solid transparent; transition: 0.3s; padding: 1.5rem; border-radius: 1.5rem; background: #f8fafc; text-align: center; }
+        .role-card.selected { border-color: #4f46e5; background: #eef2ff; transform: scale(1.05); }
+        .btn-main { background: #4f46e5; color: white; padding: 16px; border-radius: 18px; font-weight: 800; width: 100%; transition: 0.2s; }
         .btn-main:hover { background: #4338ca; transform: translateY(-1px); }
-        .step-indicator { display: flex; gap: 8px; justify-content: center; margin-bottom: 2rem; }
-        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; }
-        .step-dot.active { background: #4f46e5; }
     </style>
 </head>
 <body>
 
     <div id="page-auth" class="page active items-center justify-center p-4">
-        <div class="card relative">
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-black text-indigo-900 italic tracking-tighter">LOCALITY</h1>
-                <p id="auth-subtitle" class="text-slate-400 text-xs mt-2">מערכת שיווק ישיר מהיצרן לצרכן</p>
+        <div class="card relative shadow-2xl border border-slate-100">
+            <h1 class="text-4xl font-black text-indigo-900 text-center mb-2 italic tracking-tighter">LOCALITY</h1>
+            <p class="text-center text-slate-400 text-[10px] mb-8 uppercase tracking-widest font-bold">Direct Marketing Ecosystem</p>
+
+            <div id="step-id" class="space-y-6">
+                <div>
+                    <label>אימייל או מספר נייד</label>
+                    <input id="auth-input" type="text" placeholder="05XXXXXXXX / email@domain.com" class="text-center font-bold">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="loginWithGoogle()" class="flex items-center justify-center gap-2 border p-3 rounded-xl hover:bg-slate-50 transition text-xs font-bold">
+                        <img src="https://www.google.com/favicon.ico" class="w-4 h-4"> Google
+                    </button>
+                    <button onclick="loginWithFacebook()" class="flex items-center justify-center gap-2 border p-3 rounded-xl hover:bg-slate-50 transition text-xs font-bold text-blue-600">
+                        f Facebook
+                    </button>
+                </div>
+                <button onclick="handleIdentify()" class="btn-main shadow-lg">המשך</button>
+                <button onclick="adminLogin()" class="w-full text-[10px] text-slate-300 font-bold mt-4 uppercase tracking-widest">Admin Access</button>
             </div>
 
-            <div id="section-identify" class="space-y-6">
-                <div class="form-group">
-                    <label>מספר נייד</label>
-                    <input id="auth-phone" type="tel" placeholder="05XXXXXXXX" maxlength="10" class="text-center text-2xl font-bold tracking-widest">
+            <div id="step-role" class="hidden space-y-6">
+                <div class="bg-indigo-50 p-4 rounded-2xl text-center border border-indigo-100">
+                    <p class="text-indigo-900 font-bold text-sm">שלום, אנחנו לא מכירים!</p>
+                    <p class="text-indigo-700 text-[10px] italic">מעבירים אותך לרישום מהיר לפי סוג משתמש</p>
                 </div>
-                <button onclick="handleIdentity()" class="btn-main">המשך לזירה</button>
+                <div class="grid grid-cols-3 gap-2">
+                    <div onclick="selectRole('customer')" id="role-customer" class="role-card">🛒<br><span class="text-[9px] font-black uppercase mt-2 block">לקוח</span></div>
+                    <div onclick="selectRole('vendor')" id="role-vendor" class="role-card">🏭<br><span class="text-[9px] font-black uppercase mt-2 block">ספק</span></div>
+                    <div onclick="selectRole('hub')" id="role-hub" class="role-card">📍<br><span class="text-[9px] font-black uppercase mt-2 block">חנות</span></div>
+                </div>
+                <button onclick="showDetailsForm()" id="btn-next" class="w-full bg-slate-200 text-slate-400 py-4 rounded-2xl font-black" disabled>המשך לפרטים</button>
+                <button onclick="location.reload()" class="w-full text-xs text-slate-400 underline">חזור</button>
             </div>
 
-            <div id="section-login" class="hidden space-y-6">
-                <p id="login-greet" class="text-center font-bold text-indigo-900"></p>
-                <div class="form-group">
-                    <label>סיסמה</label>
-                    <input id="login-pass" type="password" class="text-center text-xl">
-                </div>
-                <button onclick="loginUser()" class="btn-main">התחברות</button>
-                <div class="flex justify-between px-2">
-                    <button onclick="resetFlow()" class="text-xs text-slate-400 underline italic">חזור / שנה נייד</button>
-                    <button onclick="forgotPassword()" class="text-xs text-indigo-600 font-bold">שכחתי סיסמה</button>
-                </div>
-            </div>
-
-            <div id="section-register" class="hidden space-y-4">
-                <div class="bg-indigo-50 p-3 rounded-xl text-center border border-indigo-100 mb-4">
-                    <p class="text-indigo-900 font-bold text-sm leading-tight">שלום, אנחנו לא מכירים!<br><span class="text-xs font-normal">מעבירים אותך לרישום מהיר</span></p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right">
-                    <div class="col-span-full">
-                        <label>סוג משתמש</label>
-                        <select id="reg-role" onchange="toggleRegFields()" class="font-bold">
-                            <option value="customer">לקוח קצה</option>
-                            <option value="vendor">ספק / יצרן</option>
-                            <option value="hub">נקודת איסוף (Hub)</option>
-                        </select>
+            <div id="step-details" class="hidden space-y-4 max-h-[60vh] overflow-y-auto pr-2 text-right">
+                <div id="dynamic-fields" class="space-y-4">
                     </div>
-
-                    <div><label>שם מלא</label><input id="reg-name" type="text" placeholder="כפי שמופיע בת"ז/עסק"></div>
-                    <div><label>אימייל</label><input id="reg-email" type="email" placeholder="email@example.com"></div>
-
-                    <div id="fields-vendor" class="hidden col-span-full grid grid-cols-1 md:grid-cols-2 gap-3 border-t pt-4">
-                        <div><label>שם העסק</label><input id="v-biz"></div>
-                        <div><label>כתובת מלאה</label><input id="v-addr"></div>
-                        <div><label>סוג הפצה</label>
-                            <select id="v-dist"><option value="pickup">איסוף ממני</option><option value="delivery">מביא לנקודות</option></select>
-                        </div>
-                        <div><label>אזורי הגעה</label><input id="v-zones" placeholder="מרכז, ירושלים..."></div>
-                        <div class="col-span-full bg-slate-50 p-3 rounded-xl border border-dashed">
-                            <p class="text-[9px] font-black text-slate-400 mb-2">פרטי בנק (רשימה סגורה - אפיון)</p>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input id="v-bank-name" placeholder="שם הבנק" class="text-xs p-2">
-                                <input id="v-bank-acc" placeholder="מס' חשבון" class="text-xs p-2">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="fields-hub" class="hidden col-span-full grid grid-cols-1 md:grid-cols-2 gap-3 border-t pt-4">
-                        <div><label>שם הנקודה</label><input id="h-point"></div>
-                        <div><label>כתובת (מאומת גוגל)</label><input id="h-addr"></div>
-                        <div><label>אזור שייכות</label><input id="h-zone"></div>
-                        <div class="col-span-full"><label>לוגיסטיקה</label>
-                            <select id="h-logic"><option>יכול לאסוף מספק</option><option>רק הגעה מספק</option></select>
-                        </div>
-                    </div>
-
-                    <div class="col-span-full">
-                        <label>בחר סיסמה (אותיות ומספרים)</label>
-                        <input id="reg-pass" type="password">
-                    </div>
+                <div class="flex items-center gap-2 py-4">
+                    <input type="checkbox" id="reg-terms" class="w-5 h-5 accent-indigo-600">
+                    <label for="reg-terms" class="text-[10px] text-slate-500 font-bold">אני מאשר את נהלי המערכת לאחר שקראתי אותם</label>
                 </div>
-
-                <div class="flex items-center gap-2 py-2">
-                    <input type="checkbox" id="reg-terms" class="w-4 h-4">
-                    <label for="reg-terms" class="text-[10px] text-slate-500">קראתי ואישרתי את נהלי המערכת (האפיון הקובע)</label>
-                </div>
-                
-                <div class="flex gap-2">
-                    <button onclick="resetFlow()" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-sm">ביטול</button>
-                    <button onclick="handleRegister()" class="flex-[2] btn-main">הגש בקשה לאישור</button>
-                </div>
+                <button onclick="finalizeRegistration()" class="btn-main shadow-xl">סיום והגשת בקשה</button>
             </div>
         </div>
     </div>
 
-    <div id="page-shop" class="page bg-white">
-        <nav class="p-4 border-b flex justify-between items-center bg-indigo-900 text-white">
-            <h1 class="font-black italic text-emerald-400">LOCALITY</h1>
-            <div class="flex items-center gap-4">
-                <span id="user-display" class="text-xs font-bold"></span>
-                <button onclick="resetFlow()" class="text-[10px] bg-white/10 px-2 py-1 rounded">התנתק</button>
-            </div>
-        </nav>
-        <main class="p-6 max-w-4xl mx-auto w-full text-center">
-            <div class="mb-8 p-10 bg-slate-50 rounded-[3rem] border">
-                <h2 class="text-3xl font-black mb-2">ברוך הבא לנקודת האיסוף</h2>
-                <p class="text-slate-400 italic">המערכת משייכת אותך לנקודה הקרובה ביותר לכתובתך.</p>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="aspect-square bg-slate-100 rounded-3xl flex items-center justify-center text-slate-300 font-bold uppercase tracking-tighter italic">No Products Yet</div>
-                <div class="aspect-square bg-slate-100 rounded-3xl flex items-center justify-center text-slate-300 font-bold uppercase tracking-tighter italic">Hub Assigned</div>
-            </div>
-        </main>
+    <div id="page-main" class="page bg-white p-8 items-center justify-center">
+        <div class="text-center">
+            <h2 class="text-4xl font-black text-indigo-900 mb-4">ברוך הבא, <span id="display-user-name"></span>!</h2>
+            <p id="user-status-msg" class="text-slate-500 italic mb-10"></p>
+            <button onclick="logout()" class="text-red-500 font-bold underline">התנתק מהמערכת</button>
+        </div>
     </div>
 
     <script>
-        // DB Management (LocalStorage)
-        let db = JSON.parse(localStorage.getItem('locality_db_v19')) || [];
-        let currentPhone = "";
+        // --- YOUR FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKqnuCr2ejDPU74KDzw9LZQAk830KF78Q",
+            authDomain: "locality-2a821.firebaseapp.com",
+            projectId: "locality-2a821",
+            storageBucket: "locality-2a821.firebasestorage.app",
+            messagingSenderId: "1030549590558",
+            appId: "1:1030549590558:web:b7876d795de5aa60a1140f"
+        };
 
-        function handleIdentity() {
-            currentPhone = document.getElementById('auth-phone').value;
-            if (currentPhone.length !== 10) return alert("מספר נייד חייב להכיל 10 ספרות בדיוק.");
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-            const user = db.find(u => u.phone === currentPhone);
-            document.getElementById('section-identify').classList.add('hidden');
+        let currentId = '';
+        let selectedRole = null;
 
-            if (user) {
-                document.getElementById('section-login').classList.remove('hidden');
-                document.getElementById('login-greet').innerText = `שלום שוב, ${user.name}!`;
+        // 1. Identification
+        async function handleIdentify() {
+            currentId = document.getElementById('auth-input').value;
+            if(!currentId) return alert("הזן נייד או אימייל");
+
+            const snapshot = await db.collection("users").where("idKey", "==", currentId).get();
+            
+            document.getElementById('step-id').classList.add('hidden');
+            if(snapshot.empty) {
+                document.getElementById('step-role').classList.remove('hidden');
             } else {
-                document.getElementById('section-register').classList.remove('hidden');
+                const user = snapshot.docs[0].data();
+                if(user.status === 'pending') alert("חשבונך ממתין לאישור אדמין");
+                else enterApp(user);
             }
         }
 
-        function toggleRegFields() {
-            const role = document.getElementById('reg-role').value;
-            document.getElementById('fields-vendor').classList.toggle('hidden', role !== 'vendor');
-            document.getElementById('fields-hub').classList.toggle('hidden', role !== 'hub');
+        // 2. Role Selection
+        function selectRole(role) {
+            selectedRole = role;
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById(`role-${role}`).classList.add('selected');
+            const btn = document.getElementById('btn-next');
+            btn.className = "w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg";
+            btn.disabled = false;
         }
 
-        function handleRegister() {
-            const role = document.getElementById('reg-role').value;
+        // 3. Form Rendering
+        function showDetailsForm() {
+            document.getElementById('step-role').classList.add('hidden');
+            document.getElementById('step-details').classList.remove('hidden');
+            const container = document.getElementById('dynamic-fields');
+            
+            let html = `<div><label>שם מלא</label><input id="reg-name" required></div>`;
+            
+            if(selectedRole === 'vendor') {
+                html += `
+                    <div><label>שם העסק</label><input id="v-biz"></div>
+                    <div><label>ח.פ / עוסק</label><input id="v-tax"></div>
+                    <div><label>פרטי בנק (בנק, סניף, ח-ן)</label><input id="v-bank"></div>
+                    <div><label>סוג הפצה</label><select id="v-dist"><option>איסוף ממני</option><option>מביא לנקודות</option></select></div>
+                `;
+            } else if(selectedRole === 'hub') {
+                html += `
+                    <div><label>שם הנקודה</label><input id="h-point"></div>
+                    <div><label>כתובת מלאה (גוגל)</label><input id="h-addr"></div>
+                    <div><label>אזור שייכות</label><input id="h-zone"></div>
+                `;
+            }
+            html += `<div><label>בחר סיסמה</label><input id="reg-pass" type="password" required></div>`;
+            container.innerHTML = html;
+        }
+
+        // 4. Final Registration
+        async function finalizeRegistration() {
             const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
             const pass = document.getElementById('reg-pass').value;
             const terms = document.getElementById('reg-terms').checked;
 
-            if (!name || !email.includes('@') || !pass || !terms) return alert("אנא מלא את כל השדות בצורה תקינה ואשר תקנון.");
+            if(!name || pass.length < 4 || !terms) return alert("מלא את כל השדות ואשר תקנון");
 
             const newUser = {
-                id: Date.now(),
-                phone: currentPhone,
-                name, email, role, pass,
-                status: (role === 'customer') ? 'approved' : 'pending'
+                idKey: currentId,
+                name,
+                role: selectedRole,
+                status: selectedRole === 'customer' ? 'approved' : 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            db.push(newUser);
-            localStorage.setItem('locality_db_v19', JSON.stringify(db));
-            
-            if (newUser.status === 'pending') {
-                alert("הרישום בוצע! כספק/האב, עליך להמתין לאישור אדמין.");
-                resetFlow();
+            await db.collection("users").add(newUser);
+            if(newUser.status === 'pending') {
+                alert("הבקשה נשלחה לאישור אדמין!");
+                location.reload();
             } else {
-                enterSystem(newUser);
+                enterApp(newUser);
             }
         }
 
-        function loginUser() {
-            const pass = document.getElementById('login-pass').value;
-            const user = db.find(u => u.phone === currentPhone && u.pass === pass);
-            
-            if (!user) return alert("סיסמה שגויה.");
-            if (user.status === 'pending') return alert("החשבון ממתין לאישור אדמין.");
-            
-            enterSystem(user);
-        }
-
-        function enterSystem(user) {
+        function enterApp(user) {
             document.getElementById('page-auth').classList.remove('active');
-            document.getElementById('page-shop').classList.add('active');
-            document.getElementById('user-display').innerText = `${user.name} | ${user.role}`;
+            document.getElementById('page-main').classList.add('active');
+            document.getElementById('display-user-name').innerText = user.name;
+            document.getElementById('user-status-msg').innerText = `מחובר כ-${user.role}`;
         }
 
-        function resetFlow() { location.reload(); }
-        function forgotPassword() { alert("הודעת שחזור סיסמה תשלח לנייד: " + currentPhone); }
+        async function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                const result = await auth.signInWithPopup(provider);
+                document.getElementById('auth-input').value = result.user.email;
+                handleIdentify();
+            } catch(e) { alert(e.message); }
+        }
 
-        window.onload = () => {
-            // בדיקת סשן קודם
-            const saved = localStorage.getItem('locality_session');
-            if(saved) enterSystem(JSON.parse(saved));
-        };
+        function adminLogin() {
+            const pass = prompt("Admin Key:");
+            if(pass === "1234") alert("כניסת אדמין מאושרת. נהל משתמשים ב-Firebase Console.");
+        }
+
+        function logout() { auth.signOut().then(() => location.reload()); }
     </script>
 </body>
 </html>
