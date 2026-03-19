@@ -3,306 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locality - The Direct Marketing System</title>
+    <title>Locality - Precision System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
-        body { font-family: 'Assistant', sans-serif; background: #f8fafc; color: #1e293b; }
-        .page { display: none; min-height: 100vh; }
-        .page.active { display: flex; flex-direction: column; }
-        .form-card { background: white; padding: 2.5rem; border-radius: 3rem; box-shadow: 0 20px 50px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; }
-        input, select, textarea { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 16px; outline: none; transition: 0.3s; font-size: 15px; }
-        input:focus { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-        label { display: block; font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 6px; margin-right: 4px; }
-        .admin-sidebar { width: 280px; background: #0f172a; color: white; padding: 2rem; }
-        .nav-link { padding: 14px; border-radius: 14px; cursor: pointer; margin-bottom: 8px; transition: 0.2s; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-        .nav-link:hover { background: #1e293b; }
-        .nav-link.active { background: #4f46e5; font-weight: 700; }
-        .btn-primary { background: #4f46e5; color: white; padding: 16px; border-radius: 18px; font-weight: 700; width: 100%; transition: 0.3s; }
-        .btn-primary:hover { background: #4338ca; transform: translateY(-2px); }
+        body { font-family: 'Assistant', sans-serif; background: #f8fafc; color: #0f172a; }
+        .page { display: none; min-height: 100vh; flex-direction: column; }
+        .page.active { display: flex; }
+        .card { background: white; padding: 2.5rem; border-radius: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08); width: 100%; max-width: 550px; }
+        input, select, textarea { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px; outline: none; font-size: 15px; background: #fcfdfe; }
+        input:focus { border-color: #4f46e5; ring: 3px rgba(79, 70, 229, 0.1); }
+        label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; margin-right: 4px; text-transform: uppercase; }
+        .btn-main { background: #4f46e5; color: white; padding: 16px; border-radius: 16px; font-weight: 800; width: 100%; transition: 0.2s; }
+        .btn-main:hover { background: #4338ca; transform: translateY(-1px); }
+        .step-indicator { display: flex; gap: 8px; justify-content: center; margin-bottom: 2rem; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; }
+        .step-dot.active { background: #4f46e5; }
     </style>
 </head>
 <body>
 
-    <div id="page-auth" class="page active items-center justify-center p-6">
-        <div class="max-w-md w-full">
-            <div class="text-center mb-10">
-                <h1 class="text-5xl font-black text-indigo-900 italic tracking-tighter">LOCALITY</h1>
-                <p class="text-slate-400 mt-2 font-medium">ניהול שיווק ישיר מהיצרן לצרכן</p>
+    <div id="page-auth" class="page active items-center justify-center p-4">
+        <div class="card relative">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black text-indigo-900 italic tracking-tighter">LOCALITY</h1>
+                <p id="auth-subtitle" class="text-slate-400 text-xs mt-2">מערכת שיווק ישיר מהיצרן לצרכן</p>
             </div>
 
-            <div id="auth-step-1" class="form-card">
-                <label>הכנס מספר נייד</label>
-                <input id="auth-phone" type="tel" placeholder="05X-XXXXXXX" class="text-center text-2xl font-bold tracking-widest mb-6">
-                <button onclick="handlePhoneSubmit()" class="btn-primary">המשך לזירה</button>
-                <button onclick="showAdminLogin()" class="mt-4 w-full text-xs text-slate-400 font-bold hover:text-indigo-600 transition">כניסת אדמין</button>
+            <div id="section-identify" class="space-y-6">
+                <div class="form-group">
+                    <label>מספר נייד</label>
+                    <input id="auth-phone" type="tel" placeholder="05XXXXXXXX" maxlength="10" class="text-center text-2xl font-bold tracking-widest">
+                </div>
+                <button onclick="handleIdentity()" class="btn-main">המשך לזירה</button>
             </div>
 
-            <div id="auth-login" class="hidden form-card">
-                <p id="login-greeting" class="text-center font-bold text-indigo-900 mb-6"></p>
-                <label>סיסמה</label>
-                <input id="login-pass" type="password" class="mb-6 text-center text-xl">
-                <button onclick="executeLogin()" class="btn-primary">התחברות</button>
+            <div id="section-login" class="hidden space-y-6">
+                <p id="login-greet" class="text-center font-bold text-indigo-900"></p>
+                <div class="form-group">
+                    <label>סיסמה</label>
+                    <input id="login-pass" type="password" class="text-center text-xl">
+                </div>
+                <button onclick="loginUser()" class="btn-main">התחברות</button>
+                <div class="flex justify-between px-2">
+                    <button onclick="resetFlow()" class="text-xs text-slate-400 underline italic">חזור / שנה נייד</button>
+                    <button onclick="forgotPassword()" class="text-xs text-indigo-600 font-bold">שכחתי סיסמה</button>
+                </div>
             </div>
 
-            <div id="auth-register" class="hidden form-card">
-                <div class="bg-indigo-50 p-4 rounded-2xl mb-8 text-center border border-indigo-100">
-                    <p class="text-indigo-900 font-bold">שלום, אנחנו לא מכירים!</p>
-                    <p class="text-indigo-700 text-xs italic">מעבירים אותך לרישום מהיר במערכת</p>
+            <div id="section-register" class="hidden space-y-4">
+                <div class="bg-indigo-50 p-3 rounded-xl text-center border border-indigo-100 mb-4">
+                    <p class="text-indigo-900 font-bold text-sm leading-tight">שלום, אנחנו לא מכירים!<br><span class="text-xs font-normal">מעבירים אותך לרישום מהיר</span></p>
                 </div>
 
-                <div class="space-y-4">
-                    <label>אני רוצה להירשם כ...</label>
-                    <select id="reg-role" onchange="toggleRoleFields()" class="font-bold text-indigo-600">
-                        <option value="customer">לקוח קצה</option>
-                        <option value="vendor">ספק / יצרן</option>
-                        <option value="hub">נקודת איסוף (Hub)</option>
-                    </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right">
+                    <div class="col-span-full">
+                        <label>סוג משתמש</label>
+                        <select id="reg-role" onchange="toggleRegFields()" class="font-bold">
+                            <option value="customer">לקוח קצה</option>
+                            <option value="vendor">ספק / יצרן</option>
+                            <option value="hub">נקודת איסוף (Hub)</option>
+                        </select>
+                    </div>
 
-                    <div class="grid grid-cols-1 gap-4">
-                        <div><label>שם מלא</label><input id="reg-name" type="text"></div>
-                        <div><label>אימייל</label><input id="reg-email" type="email"></div>
-                        
-                        <div id="v-fields" class="hidden space-y-4 border-t pt-4">
-                            <div><label>שם העסק</label><input id="v-biz"></div>
-                            <div><label>כתובת</label><input id="v-addr"></div>
-                            <div><label>סוג הפצה</label>
-                                <select id="v-dist"><option value="pickup">איסוף ממני</option><option value="delivery">מביא לנקודות</option></select>
-                            </div>
-                            <div><label>אזורי הגעה</label><select id="v-zones-select" multiple class="h-24"></select></div>
-                            <div class="p-4 bg-slate-50 rounded-2xl">
-                                <p class="text-[10px] font-black mb-2 opacity-50">פרטי בנק (רשות)</p>
-                                <input id="v-bank" placeholder="בנק, סניף, ח-ן" class="text-xs mb-2">
-                            </div>
+                    <div><label>שם מלא</label><input id="reg-name" type="text" placeholder="כפי שמופיע בת"ז/עסק"></div>
+                    <div><label>אימייל</label><input id="reg-email" type="email" placeholder="email@example.com"></div>
+
+                    <div id="fields-vendor" class="hidden col-span-full grid grid-cols-1 md:grid-cols-2 gap-3 border-t pt-4">
+                        <div><label>שם העסק</label><input id="v-biz"></div>
+                        <div><label>כתובת מלאה</label><input id="v-addr"></div>
+                        <div><label>סוג הפצה</label>
+                            <select id="v-dist"><option value="pickup">איסוף ממני</option><option value="delivery">מביא לנקודות</option></select>
                         </div>
-
-                        <div id="h-fields" class="hidden space-y-4 border-t pt-4">
-                            <div><label>שם הנקודה</label><input id="h-point"></div>
-                            <div><label>כתובת (מאומת גוגל)</label><input id="h-addr"></div>
-                            <div><label>אזור שייכות</label><select id="h-zones-select"></select></div>
-                            <div><label>לוגיסטיקה</label>
-                                <select id="h-logic"><option>יכול לאסוף מספק</option><option>רק הגעה מספק</option></select>
+                        <div><label>אזורי הגעה</label><input id="v-zones" placeholder="מרכז, ירושלים..."></div>
+                        <div class="col-span-full bg-slate-50 p-3 rounded-xl border border-dashed">
+                            <p class="text-[9px] font-black text-slate-400 mb-2">פרטי בנק (רשימה סגורה - אפיון)</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input id="v-bank-name" placeholder="שם הבנק" class="text-xs p-2">
+                                <input id="v-bank-acc" placeholder="מס' חשבון" class="text-xs p-2">
                             </div>
                         </div>
                     </div>
 
-                    <div class="pt-4 border-t">
-                        <label>בחר סיסמה</label>
-                        <input id="reg-pass" type="password" class="mb-4">
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="reg-terms" class="w-4 h-4 accent-indigo-600">
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">קראתי ואישרתי את התקנון</span>
+                    <div id="fields-hub" class="hidden col-span-full grid grid-cols-1 md:grid-cols-2 gap-3 border-t pt-4">
+                        <div><label>שם הנקודה</label><input id="h-point"></div>
+                        <div><label>כתובת (מאומת גוגל)</label><input id="h-addr"></div>
+                        <div><label>אזור שייכות</label><input id="h-zone"></div>
+                        <div class="col-span-full"><label>לוגיסטיקה</label>
+                            <select id="h-logic"><option>יכול לאסוף מספק</option><option>רק הגעה מספק</option></select>
                         </div>
                     </div>
-                    <button onclick="handleRegister()" class="btn-primary mt-4">סיום רישום</button>
+
+                    <div class="col-span-full">
+                        <label>בחר סיסמה (אותיות ומספרים)</label>
+                        <input id="reg-pass" type="password">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 py-2">
+                    <input type="checkbox" id="reg-terms" class="w-4 h-4">
+                    <label for="reg-terms" class="text-[10px] text-slate-500">קראתי ואישרתי את נהלי המערכת (האפיון הקובע)</label>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="resetFlow()" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-sm">ביטול</button>
+                    <button onclick="handleRegister()" class="flex-[2] btn-main">הגש בקשה לאישור</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="page-admin" class="page flex-row bg-slate-50">
-        <aside class="admin-sidebar shadow-2xl">
-            <div class="text-2xl font-black italic mb-10 text-indigo-400">ADMIN HQ</div>
-            <nav class="space-y-2">
-                <div onclick="showAdminTab('users')" id="tab-users" class="nav-link active"><span>👥</span> ניהול משתמשים</div>
-                <div onclick="showAdminTab('zones')" id="tab-zones" class="nav-link"><span>📍</span> אזורי חלוקה</div>
-                <div onclick="showAdminTab('settings')" id="tab-settings" class="nav-link"><span>⚙️</span> הגדרות עמלות</div>
-            </nav>
-            <button onclick="location.reload()" class="mt-20 text-slate-500 text-xs hover:text-white transition font-bold uppercase tracking-widest">התנתק</button>
-        </aside>
-
-        <main class="flex-1 p-12 overflow-y-auto">
-            <div id="admin-users" class="admin-section">
-                <h2 class="text-3xl font-black mb-8">אישור וניהול משתמשים</h2>
-                <div class="bg-white rounded-[2rem] border overflow-hidden shadow-sm">
-                    <table class="w-full text-right">
-                        <thead class="bg-slate-50 border-b">
-                            <tr>
-                                <th class="p-5 text-xs font-black uppercase text-slate-400">שם</th>
-                                <th class="p-5 text-xs font-black uppercase text-slate-400">תפקיד</th>
-                                <th class="p-5 text-xs font-black uppercase text-slate-400">סטטוס</th>
-                                <th class="p-5 text-xs font-black uppercase text-slate-400 text-left">פעולות</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-list"></tbody>
-                    </table>
-                </div>
+    <div id="page-shop" class="page bg-white">
+        <nav class="p-4 border-b flex justify-between items-center bg-indigo-900 text-white">
+            <h1 class="font-black italic text-emerald-400">LOCALITY</h1>
+            <div class="flex items-center gap-4">
+                <span id="user-display" class="text-xs font-bold"></span>
+                <button onclick="resetFlow()" class="text-[10px] bg-white/10 px-2 py-1 rounded">התנתק</button>
             </div>
-
-            <div id="admin-zones" class="admin-section hidden">
-                <h2 class="text-3xl font-black mb-8">ניהול אזורי חלוקה</h2>
-                <div class="form-card max-w-lg mb-8">
-                    <label>הוסף אזור חדש</label>
-                    <div class="flex gap-2">
-                        <input id="new-zone-input" placeholder="למשל: עמק יזרעאל">
-                        <button onclick="addZone()" class="bg-indigo-600 text-white px-6 rounded-xl font-bold">הוסף</button>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="zone-display"></div>
+        </nav>
+        <main class="p-6 max-w-4xl mx-auto w-full text-center">
+            <div class="mb-8 p-10 bg-slate-50 rounded-[3rem] border">
+                <h2 class="text-3xl font-black mb-2">ברוך הבא לנקודת האיסוף</h2>
+                <p class="text-slate-400 italic">המערכת משייכת אותך לנקודה הקרובה ביותר לכתובתך.</p>
             </div>
-
-            <div id="admin-settings" class="admin-section hidden">
-                <h2 class="text-3xl font-black mb-8">הגדרות מערכת</h2>
-                <div class="form-card max-w-md">
-                    <div class="space-y-6">
-                        <div><label>עמלת מערכת (%)</label><input type="number" value="10"></div>
-                        <div><label>עמלת נקודת איסוף (%)</label><input type="number" value="5"></div>
-                        <button class="btn-primary">שמור הגדרות</button>
-                    </div>
-                </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="aspect-square bg-slate-100 rounded-3xl flex items-center justify-center text-slate-300 font-bold uppercase tracking-tighter italic">No Products Yet</div>
+                <div class="aspect-square bg-slate-100 rounded-3xl flex items-center justify-center text-slate-300 font-bold uppercase tracking-tighter italic">Hub Assigned</div>
             </div>
         </main>
     </div>
 
     <script>
-        // DB Core
-        let db = JSON.parse(localStorage.getItem('locality_db_v18')) || [];
-        let zones = JSON.parse(localStorage.getItem('locality_zones')) || ["מרכז", "צפון", "דרום"];
-        let currentUser = null;
+        // DB Management (LocalStorage)
+        let db = JSON.parse(localStorage.getItem('locality_db_v19')) || [];
+        let currentPhone = "";
 
-        // AUTH LOGIC
-        function handlePhoneSubmit() {
-            const phone = document.getElementById('auth-phone').value;
-            if (phone.length < 9) return alert("מספר לא תקין");
-            
-            currentUser = db.find(u => u.phone === phone);
-            document.getElementById('auth-step-1').classList.add('hidden');
-            
-            if (currentUser) {
-                document.getElementById('auth-login').classList.remove('hidden');
-                document.getElementById('login-greeting').innerText = `שלום ${currentUser.name}, הכנס סיסמה:`;
+        function handleIdentity() {
+            currentPhone = document.getElementById('auth-phone').value;
+            if (currentPhone.length !== 10) return alert("מספר נייד חייב להכיל 10 ספרות בדיוק.");
+
+            const user = db.find(u => u.phone === currentPhone);
+            document.getElementById('section-identify').classList.add('hidden');
+
+            if (user) {
+                document.getElementById('section-login').classList.remove('hidden');
+                document.getElementById('login-greet').innerText = `שלום שוב, ${user.name}!`;
             } else {
-                document.getElementById('auth-register').classList.remove('hidden');
-                populateZoneSelects();
+                document.getElementById('section-register').classList.remove('hidden');
             }
         }
 
-        function toggleRoleFields() {
+        function toggleRegFields() {
             const role = document.getElementById('reg-role').value;
-            document.getElementById('v-fields').classList.toggle('hidden', role !== 'vendor');
-            document.getElementById('h-fields').classList.toggle('hidden', role !== 'hub');
-        }
-
-        function populateZoneSelects() {
-            const vSelect = document.getElementById('v-zones-select');
-            const hSelect = document.getElementById('h-zones-select');
-            const options = zones.map(z => `<option value="${z}">${z}</option>`).join('');
-            vSelect.innerHTML = options;
-            hSelect.innerHTML = `<option value="">בחר אזור...</option>` + options;
+            document.getElementById('fields-vendor').classList.toggle('hidden', role !== 'vendor');
+            document.getElementById('fields-hub').classList.toggle('hidden', role !== 'hub');
         }
 
         function handleRegister() {
-            const phone = document.getElementById('auth-phone').value;
+            const role = document.getElementById('reg-role').value;
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
-            const role = document.getElementById('reg-role').value;
             const pass = document.getElementById('reg-pass').value;
             const terms = document.getElementById('reg-terms').checked;
 
-            if (!name || !email.includes('@') || !pass || !terms) return alert("אנא מלא את כל שדות החובה ואשר תקנון");
+            if (!name || !email.includes('@') || !pass || !terms) return alert("אנא מלא את כל השדות בצורה תקינה ואשר תקנון.");
 
             const newUser = {
-                phone, name, email, role, pass,
                 id: Date.now(),
-                status: (role === 'customer' || phone === '0500000000') ? 'approved' : 'pending'
+                phone: currentPhone,
+                name, email, role, pass,
+                status: (role === 'customer') ? 'approved' : 'pending'
             };
 
             db.push(newUser);
-            saveDB();
-            alert("הרישום בוצע! " + (newUser.status === 'pending' ? "ממתין לאישור אדמין." : "ברוך הבא."));
-            location.reload();
-        }
-
-        function executeLogin() {
-            const pass = document.getElementById('login-pass').value;
-            if (currentUser.pass === pass) {
-                if (currentUser.phone === '0500000000') showAdmin();
-                else if (currentUser.status === 'pending') alert("החשבון ממתין לאישור אדמין");
-                else alert("נכנסת בהצלחה כ-" + currentUser.role);
+            localStorage.setItem('locality_db_v19', JSON.stringify(db));
+            
+            if (newUser.status === 'pending') {
+                alert("הרישום בוצע! כספק/האב, עליך להמתין לאישור אדמין.");
+                resetFlow();
             } else {
-                alert("סיסמה שגויה");
+                enterSystem(newUser);
             }
         }
 
-        function showAdminLogin() {
-            document.getElementById('auth-phone').value = "0500000000";
-            handlePhoneSubmit();
+        function loginUser() {
+            const pass = document.getElementById('login-pass').value;
+            const user = db.find(u => u.phone === currentPhone && u.pass === pass);
+            
+            if (!user) return alert("סיסמה שגויה.");
+            if (user.status === 'pending') return alert("החשבון ממתין לאישור אדמין.");
+            
+            enterSystem(user);
         }
 
-        // ADMIN LOGIC
-        function showAdmin() {
+        function enterSystem(user) {
             document.getElementById('page-auth').classList.remove('active');
-            document.getElementById('page-admin').classList.add('active');
-            renderUsers();
-            renderZones();
+            document.getElementById('page-shop').classList.add('active');
+            document.getElementById('user-display').innerText = `${user.name} | ${user.role}`;
         }
 
-        function showAdminTab(tab) {
-            document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('admin-' + tab).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
-        }
+        function resetFlow() { location.reload(); }
+        function forgotPassword() { alert("הודעת שחזור סיסמה תשלח לנייד: " + currentPhone); }
 
-        function renderUsers() {
-            const list = document.getElementById('user-list');
-            list.innerHTML = db.map(u => `
-                <tr class="border-b hover:bg-slate-50 transition">
-                    <td class="p-5 font-bold text-indigo-900">${u.name}</td>
-                    <td class="p-5 text-xs font-black uppercase text-slate-400">${u.role}</td>
-                    <td class="p-5">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold ${u.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}">
-                            ${u.status.toUpperCase()}
-                        </span>
-                    </td>
-                    <td class="p-5 text-left">
-                        ${u.status === 'pending' ? `<button onclick="approveUser(${u.id})" class="text-indigo-600 font-bold ml-4">אשר</button>` : ''}
-                        <button onclick="deleteUser(${u.id})" class="text-red-400 hover:text-red-600 font-bold">מחק</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderZones() {
-            const container = document.getElementById('zone-display');
-            container.innerHTML = zones.map((z, i) => `
-                <div class="bg-white p-4 rounded-2xl border flex justify-between items-center shadow-sm">
-                    <span class="font-bold">${z}</span>
-                    <button onclick="deleteZone(${i})" class="text-red-300 hover:text-red-600 font-black">&times;</button>
-                </div>
-            `).join('');
-            localStorage.setItem('locality_zones', JSON.stringify(zones));
-        }
-
-        function addZone() {
-            const input = document.getElementById('new-zone-input');
-            if (input.value) {
-                zones.push(input.value);
-                input.value = '';
-                renderZones();
-            }
-        }
-
-        function deleteZone(index) {
-            zones.splice(index, 1);
-            renderZones();
-        }
-
-        function approveUser(id) {
-            db.find(u => u.id === id).status = 'approved';
-            saveDB();
-            renderUsers();
-        }
-
-        function deleteUser(id) {
-            if(confirm("למחוק משתמש?")) {
-                db = db.filter(u => u.id !== id);
-                saveDB();
-                renderUsers();
-            }
-        }
-
-        function saveDB() { localStorage.setItem('locality_db_v18', JSON.stringify(db)); }
+        window.onload = () => {
+            // בדיקת סשן קודם
+            const saved = localStorage.getItem('locality_session');
+            if(saved) enterSystem(JSON.parse(saved));
+        };
     </script>
 </body>
 </html>
