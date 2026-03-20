@@ -3,185 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locality - המהפכה הלוגיסטית</title>
+    <title>LOCALITY | המערכת הרשמית</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
-        
-        :root {
-            --primary: #1e1b4b; /* Indigo 950 */
-            --accent: #fbbf24;  /* Amber 400 */
-        }
-
-        body { 
-            font-family: 'Assistant', sans-serif; 
-            background: radial-gradient(circle at top right, #f8fafc, #e2e8f0);
-            min-height: 100vh;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-        }
-
-        .role-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-        }
-
-        .role-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.2);
-            border-color: #4f46e5;
-        }
-
-        .input-styled {
-            @apply w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 transition-all;
-        }
-
-        .btn-primary {
-            @apply w-full bg-indigo-950 text-white py-4 rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-900 active:scale-95 transition-all;
-        }
-
-        .nav-link { @apply text-xs font-bold uppercase tracking-widest text-indigo-900 hover:text-indigo-600 transition; }
-
-        /* Animation */
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;700;800&display=swap');
+        body { font-family: 'Assistant', sans-serif; background: #fdfdfd; color: #0f172a; }
+        .logo-text { font-size: 2.2rem; font-weight: 900; letter-spacing: -2px; background: linear-gradient(90deg, #1e1b4b, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; }
+        .input-box { width: 100%; padding: 1.2rem; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 1.5rem; outline: none; transition: 0.3s; font-weight: 600; }
+        .input-box:focus { border-color: #4f46e5; background: white; box-shadow: 0 10px 20px -10px rgba(79,70,229,0.2); }
+        .role-card { @apply p-8 bg-slate-50 border-2 border-transparent rounded-[2.5rem] transition-all cursor-pointer hover:border-indigo-600 hover:bg-white text-center; }
+        .btn-action { @apply w-full bg-indigo-950 text-white py-5 rounded-[1.8rem] font-extrabold text-xl shadow-2xl hover:bg-indigo-800 active:scale-95 transition-all; }
+        .modal-bg { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); display: none; position: fixed; inset: 0; z-[3000] items-center justify-center p-6; }
+        .modal-bg.active { display: flex; }
+        .pass-wrapper { position: relative; }
+        .eye-icon { position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.5; }
+        .section-tag { @apply text-[10px] font-black uppercase text-indigo-500 mb-2 block tracking-widest; }
     </style>
 </head>
-<body class="p-0 m-0">
+<body class="antialiased">
 
-    <nav class="fixed top-0 inset-x-0 h-20 bg-white/80 backdrop-blur-md z-50 px-6 flex justify-between items-center border-b border-slate-100">
-        <div class="flex items-center gap-6">
-            <h1 class="text-3xl font-black italic text-indigo-950 tracking-tighter">LOCALITY</h1>
-            <div id="logged-in-nav" class="hidden flex gap-4 border-r pr-6">
-                <button onclick="location.reload()" class="nav-link">דף הבית</button>
-                <button onclick="logout()" class="nav-link text-red-500">התנתקות</button>
-            </div>
-        </div>
-        <button onclick="openContact()" class="bg-indigo-50 text-indigo-700 px-5 py-2 rounded-full text-xs font-black border border-indigo-100 hover:bg-indigo-100 transition">
-            צור קשר עם האדמין
-        </button>
+    <nav class="fixed top-0 inset-x-0 h-24 bg-white/80 backdrop-blur-xl z-[1000] px-10 flex justify-between items-center border-b border-slate-100">
+        <div onclick="location.reload()" class="logo-text">LOCALITY.</div>
+        <button onclick="openModal('modal-contact')" class="text-sm font-bold text-indigo-600 border-b-2 border-indigo-100 hover:border-indigo-600 transition">צור קשר</button>
     </nav>
 
-    <div class="pt-32 pb-12 px-4 flex items-center justify-center">
+    <div class="min-h-screen pt-32 pb-20 px-4 flex items-center justify-center">
         
-        <div id="page-auth" class="fade-in w-full max-w-xl glass-card p-10 rounded-[3rem]">
+        <div id="auth-container" class="bg-white border border-slate-100 w-full max-w-3xl p-12 rounded-[4rem] shadow-2xl">
             
-            <div id="step-identify" class="space-y-8">
-                <div class="text-center space-y-2">
-                    <h2 class="text-2xl font-extrabold text-slate-800">ברוכים הבאים לזירה</h2>
-                    <p class="text-slate-400 text-sm">התחברות מהירה למערכת השיווק הישיר</p>
+            <div id="step-id" class="space-y-8">
+                <div class="text-center">
+                    <h2 class="text-4xl font-black text-slate-900 tracking-tighter">המערכת הלוגיסטית</h2>
+                    <p class="text-slate-400 font-medium mt-2">התחברות מהירה (נייד או אימייל)</p>
                 </div>
-
-                <div class="space-y-4">
-                    <label class="text-[11px] font-black uppercase text-slate-400 mr-2">נייד או אימייל</label>
-                    <input id="auth-input" type="text" placeholder="05XXXXXXXX" class="input-styled text-center text-2xl font-bold">
-                </div>
-
+                <input id="login-input" type="text" placeholder="הכנס מספר נייד (10 ספרות) או אימייל" class="input-box text-center text-2xl">
                 <div class="grid grid-cols-2 gap-4">
-                    <button onclick="loginSocial('Google')" class="flex items-center justify-center gap-3 p-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition font-bold text-sm">
-                        <img src="https://www.google.com/favicon.ico" class="w-5 h-5"> Google
-                    </button>
-                    <button onclick="loginSocial('Facebook')" class="flex items-center justify-center gap-3 p-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition font-bold text-sm text-blue-700">
-                        <span class="text-xl">f</span> Facebook
-                    </button>
+                    <button onclick="social('Google')" class="flex items-center justify-center gap-3 p-4 border-2 border-slate-50 rounded-2xl font-bold hover:bg-slate-50 transition"><img src="https://www.google.com/favicon.ico" class="w-5 h-5"> Google</button>
+                    <button onclick="social('Facebook')" class="flex items-center justify-center gap-3 p-4 border-2 border-slate-50 rounded-2xl font-bold text-blue-800 hover:bg-slate-50 transition">Facebook</button>
                 </div>
-
-                <button onclick="handleIdentify()" class="btn-primary">המשך</button>
+                <button onclick="handleIdentify()" class="btn-action">המשך לזירה</button>
             </div>
 
-            <div id="step-role" class="hidden space-y-8">
-                <div class="text-center bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100">
-                    <h3 class="text-indigo-900 font-extrabold">שלום, אנחנו לא מכירים!</h3>
-                    <p class="text-indigo-700 text-xs italic italic">מעבירים אותך לרישום מהיר במערכת</p>
+            <div id="step-role" class="hidden space-y-12 text-center">
+                <div class="bg-indigo-50 p-8 rounded-[3rem] border border-indigo-100">
+                    <h3 class="text-2xl font-black text-indigo-900 italic">שלום, אנחנו לא מכירים!</h3>
+                    <p class="text-indigo-600 font-medium mt-1 italic">מעבירים אותך לרישום מהיר במערכת</p>
                 </div>
-                
-                <p class="text-center text-xs font-black text-slate-400 uppercase tracking-widest">בחר את סוג הפעילות שלך</p>
-                <div class="grid grid-cols-3 gap-4">
-                    <div onclick="autoSelectRole('customer')" class="role-card p-6 bg-white border border-slate-100 rounded-3xl text-center">
-                        <div class="text-4xl mb-3">🛒</div>
-                        <div class="text-xs font-black text-indigo-950 uppercase">לקוח</div>
-                    </div>
-                    <div onclick="autoSelectRole('vendor')" class="role-card p-6 bg-white border border-slate-100 rounded-3xl text-center">
-                        <div class="text-4xl mb-3">🏭</div>
-                        <div class="text-xs font-black text-indigo-950 uppercase">ספק</div>
-                    </div>
-                    <div onclick="autoSelectRole('hub')" class="role-card p-6 bg-white border border-slate-100 rounded-3xl text-center">
-                        <div class="text-4xl mb-3">📍</div>
-                        <div class="text-xs font-black text-indigo-950 uppercase">חנות</div>
-                    </div>
+                <div class="grid grid-cols-3 gap-6">
+                    <div onclick="startRegister('לקוח')" class="role-card"><span class="text-5xl block mb-2">🛒</span><span class="text-xs font-black uppercase">לקוח</span></div>
+                    <div onclick="startRegister('ספק')" class="role-card"><span class="text-5xl block mb-2">🏭</span><span class="text-xs font-black uppercase">ספק</span></div>
+                    <div onclick="startRegister('חנות')" class="role-card"><span class="text-5xl block mb-2">📍</span><span class="text-xs font-black uppercase">חנות</span></div>
                 </div>
-                <button onclick="location.reload()" class="w-full text-center text-xs text-slate-400 underline font-bold">ביטול וחזרה</button>
             </div>
 
-            <div id="step-details" class="hidden space-y-6 text-right">
-                <div id="dynamic-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto pr-2">
+            <div id="step-form" class="hidden space-y-8 text-right">
+                <div id="dynamic-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[55vh] overflow-y-auto pr-4">
                     </div>
 
-                <div class="border-t pt-6 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="relative">
-                            <label class="text-[10px] font-black uppercase text-slate-400">סיסמה חדשה</label>
-                            <input id="pass1" type="password" oninput="checkStrength(this.value)" class="input-styled">
-                            <button onclick="toggleEye('pass1')" class="absolute left-4 top-9 text-slate-300">👁️</button>
-                            <div id="str-hint" class="text-[9px] font-bold mt-2 text-slate-400">מינימום 6 תווים, ספרה ואות גדולה</div>
+                <div class="border-t pt-8 space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="pass-wrapper">
+                            <label class="section-tag">בחר סיסמה</label>
+                            <input id="p1" type="password" placeholder="לפחות 6 תווים" oninput="checkStrength(this.value)" class="input-box">
+                            <span onclick="toggleEye('p1')" class="eye-icon">👁️</span>
+                            <div id="str-hint" class="text-[10px] font-bold mt-2 text-slate-400">חייב אות גדולה ומספר</div>
                         </div>
-                        <div class="relative">
-                            <label class="text-[10px] font-black uppercase text-slate-400">אימות סיסמה</label>
-                            <input id="pass2" type="password" class="input-styled">
-                            <button onclick="toggleEye('pass2')" class="absolute left-4 top-9 text-slate-300">👁️</button>
+                        <div class="pass-wrapper">
+                            <label class="section-tag">אימות סיסמה</label>
+                            <input id="p2" type="password" placeholder="הקלד שוב" class="input-box">
+                            <span onclick="toggleEye('p2')" class="eye-icon">👁️</span>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <input type="checkbox" id="terms-check" class="w-6 h-6 accent-indigo-600 rounded-lg">
-                        <label for="terms-check" class="text-[11px] text-slate-600 font-bold leading-tight">
-                            אני מאשר את <button type="button" class="text-indigo-600 underline">תנאי השימוש</button> של LOCALITY
-                        </label>
+                    <div class="flex items-center gap-4 bg-slate-50 p-6 rounded-3xl">
+                        <input type="checkbox" id="terms-v" class="w-7 h-7 accent-indigo-600">
+                        <label class="text-xs font-bold text-slate-600">אני מאשר את <button type="button" onclick="openTerms()" class="text-indigo-600 underline">תנאי השימוש</button> של LOCALITY לאחר שקראתי אותם</label>
                     </div>
                 </div>
-
-                <div id="val-error" class="hidden p-4 bg-red-50 text-red-600 text-xs font-black rounded-xl"></div>
-                <button id="final-submit-btn" onclick="finalize()" class="btn-primary">סיום והגשת בקשה</button>
+                <button id="final-btn" onclick="submitFinal()" class="btn-action">סיום והעבר אותי להמשך</button>
             </div>
-        </div>
-
-        <div id="page-hub-match" class="hidden fade-in w-full max-w-2xl glass-card p-12 rounded-[4rem] text-center">
-            <div class="text-6xl mb-6">🛰️</div>
-            <h2 class="text-3xl font-black text-indigo-950 mb-4">מאתרים את הנקודה שלך...</h2>
-            <p class="text-slate-500 mb-8 italic">לפי הכתובת שהזנת, אנחנו משייכים אותך לנקודת האיסוף הקרובה והמשתלמת ביותר.</p>
-            <div class="p-8 bg-indigo-50 border border-indigo-100 rounded-[2.5rem] mb-10">
-                <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">נקודה משוערת</p>
-                <p id="assigned-hub-name" class="text-2xl font-black text-indigo-900">מחפש חנות קרובה...</p>
-            </div>
-            <button onclick="location.reload()" class="btn-primary">כניסה לחנות שלי</button>
         </div>
     </div>
 
-    <div id="modal-contact" class="hidden fixed inset-0 z-[3000] bg-indigo-950/40 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-lg text-right">
-            <h2 class="text-2xl font-black text-indigo-950 mb-6">צור קשר עם המטה</h2>
+    <div id="modal-contact" class="modal-bg">
+        <div class="bg-white p-12 rounded-[4rem] w-full max-w-xl text-right">
+            <h2 class="text-3xl font-black text-indigo-950 mb-8 italic">צור קשר</h2>
             <div class="space-y-4">
-                <input id="c-name" placeholder="שם מלא" class="input-styled">
-                <input id="c-phone" placeholder="נייד" class="input-styled">
-                <textarea id="c-msg" placeholder="מה תרצה לומר לנו?" class="input-styled h-32"></textarea>
-                <div class="flex gap-3">
-                    <button onclick="closeContact()" class="flex-1 p-4 rounded-2xl font-bold bg-slate-100">ביטול</button>
-                    <button onclick="alert('הפנייה נשלחה!')" class="flex-[2] btn-primary">שלח פנייה</button>
+                <input id="c-name" placeholder="שם מלא" class="input-box">
+                <input id="c-phone" placeholder="מספר נייד" class="input-box">
+                <textarea id="c-msg" placeholder="פרטי הפנייה" class="input-box h-32"></textarea>
+                <div class="flex gap-4">
+                    <button onclick="closeModal('modal-contact')" class="flex-1 p-5 rounded-[1.5rem] font-bold bg-slate-100">ביטול</button>
+                    <button onclick="sendContact()" class="flex-[2] btn-action">שלח פנייה למנהל השירות</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="modal-terms" class="modal-bg">
+        <div class="bg-white p-12 rounded-[4rem] max-w-2xl w-full text-right">
+            <h2 class="text-2xl font-black mb-6">תנאי שימוש</h2>
+            <div id="terms-txt" class="text-sm text-slate-600 leading-relaxed max-h-[40vh] overflow-y-auto pr-4 border-r-4 border-indigo-100"></div>
+            <button onclick="closeModal('modal-terms')" class="w-full bg-indigo-950 text-white py-5 rounded-[1.5rem] font-black mt-8">קראתי ואישרתי</button>
         </div>
     </div>
 
     <script>
-        // --- FIREBASE CONFIG (YOURS) ---
         const firebaseConfig = {
             apiKey: "AIzaSyCKqnuCr2ejDPU74KDzw9LZQAk830KF78Q",
             authDomain: "locality-2a821.firebaseapp.com",
@@ -196,9 +126,64 @@
         let currentId = '';
         let role = '';
 
-        function toggleEye(id) {
-            const el = document.getElementById(id);
-            el.type = el.type === 'password' ? 'text' : 'password';
+        function toggleEye(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
+
+        function handleIdentify() {
+            currentId = document.getElementById('login-input').value;
+            const isPhone = /^\d{10}$/.test(currentId);
+            const isEmail = /\S+@\S+\.\S+/.test(currentId);
+            if(!isPhone && !isEmail) return alert("הזן נייד 10 ספרות או מייל תקין");
+            document.getElementById('step-id').classList.add('hidden');
+            document.getElementById('step-role').classList.remove('hidden');
+        }
+
+        function startRegister(r) {
+            role = r;
+            document.getElementById('step-role').classList.add('hidden');
+            document.getElementById('step-form').classList.remove('hidden');
+            renderFields();
+        }
+
+        function renderFields() {
+            const container = document.getElementById('dynamic-fields');
+            const btn = document.getElementById('final-btn');
+            
+            let html = `
+                <div class="col-span-full"><span class="section-tag">פרטי זיהוי חובה</span></div>
+                <input id="f-name" placeholder="שם מלא (פרטי + משפחה)" class="input-box" required>
+                <input id="f-email" placeholder="אימייל" class="input-box" value="${currentId.includes('@')?currentId:''}">
+                <input id="f-phone" placeholder="נייד ראשי" class="input-box" value="${!currentId.includes('@')?currentId:''}">
+            `;
+
+            if(role === 'לקוח') {
+                html += `<input id="f-phone2" placeholder="נייד נוסף (זמינות)" class="input-box">
+                         <input id="f-addr" placeholder="כתובת מגורים (לשיווק נקודה קרובה)" class="input-box col-span-full">`;
+                btn.innerText = "העבר אותי לנקודת האיסוף שלי";
+            } else if(role === 'ספק') {
+                html += `
+                    <input id="v-biz" placeholder="שם העסק" class="input-box">
+                    <input id="v-tax" placeholder="ח.פ / עוסק מורשה" class="input-box">
+                    <input id="v-addr" placeholder="כתובת העסק" class="input-box col-span-full">
+                    <div class="col-span-full"><span class="section-tag">פרטי בנק להעברות</span></div>
+                    <input id="v-b-o" placeholder="שם בעל החשבון" class="input-box"><input id="v-b-n" placeholder="שם הבנק" class="input-box">
+                    <input id="v-b-s" placeholder="מספר סניף" class="input-box"><input id="v-b-a" placeholder="מספר חשבון" class="input-box">
+                    <div class="col-span-full"><span class="section-tag">לוגיסטיקה והפצה</span></div>
+                    <select id="v-dist" class="input-box"><option value="pickup">איסוף ממני</option><option value="delivery">מביא לנקודות</option></select>
+                    <input id="v-cat" placeholder="קטגוריות מוצרים" class="input-box">
+                    <select id="v-fair" class="input-box"><option>יריד מכירות? לא</option><option>יריד מכירות? כן</option></select>
+                `;
+                btn.innerText = "שלח בקשת ספק לאישור אדמין";
+            } else if(role === 'חנות') {
+                html += `
+                    <input id="h-point" placeholder="שם הנקודה" class="input-box">
+                    <input id="h-addr" placeholder="כתובת (מאומת גוגל)" class="input-box">
+                    <input id="h-zone" placeholder="אזור שייכות (לפי הגדרת אדמין)" class="input-box">
+                    <select id="h-logic" class="input-box"><option>יכול לאסוף מספק</option><option>רק הגעה מספק</option></select>
+                    <textarea id="h-notes" placeholder="הערות לאיסוף עבור לקוחות" class="input-box col-span-full h-24"></textarea>
+                `;
+                btn.innerText = "שלח בקשת חנות לאישור אדמין";
+            }
+            container.innerHTML = html;
         }
 
         function checkStrength(p) {
@@ -208,101 +193,35 @@
             if(!/[A-Z]/.test(p)) checks.push("אות גדולה");
             if(!/[0-9]/.test(p)) checks.push("ספרה");
             h.innerText = checks.length ? "חסר: " + checks.join(", ") : "סיסמה חזקה!";
-            h.className = "text-[9px] font-bold mt-2 " + (checks.length ? "text-orange-500" : "text-emerald-500");
+            h.className = "text-[10px] font-bold mt-2 " + (checks.length ? "text-orange-500" : "text-emerald-500");
         }
 
-        async function handleIdentify() {
-            currentId = document.getElementById('auth-input').value;
-            if(!currentId) return;
-            const snap = await db.collection("users").where("idKey", "==", currentId).get();
-            document.getElementById('step-identify').classList.add('hidden');
-            if(snap.empty) {
-                document.getElementById('step-role').classList.remove('hidden');
-            } else {
-                alert("משתמש מזוהה - עובר למסך סיסמה");
-            }
+        function openTerms() {
+            openModal('modal-terms');
+            const content = {
+                'לקוח': "תנאי לקוח: המערכת משייכת אותך לנקודה קרובה. עליך לאסוף את הסחורה...",
+                'ספק': "תנאי ספק: עליך להחזיק בתיק מוצר מאושר, לספק סחורה במועדים...",
+                'חנות': "תנאי חנות: עליך לדאוג למקום איסוף נגיש, ניהול המלאי המגיע..."
+            };
+            document.getElementById('terms-txt').innerText = content[role] || "תנאים כלליים...";
         }
 
-        function autoSelectRole(r) {
-            role = r;
-            document.getElementById('step-role').classList.add('hidden');
-            document.getElementById('step-details').classList.remove('hidden');
-            renderSpecFields();
-        }
+        function sendContact() { alert("הפנייה נשלחה למנהל השירות ותענה בהקדם."); closeModal('modal-contact'); }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function renderSpecFields() {
-            const container = document.getElementById('dynamic-fields');
-            const submitBtn = document.getElementById('final-submit-btn');
+        async function submitFinal() {
+            const p1 = document.getElementById('p1').value;
+            const p2 = document.getElementById('p2').value;
+            if(p1 !== p2 || p1.length < 5) return alert("בדוק סיסמאות");
+            if(!document.getElementById('terms-v').checked) return alert("חובה לאשר תנאי שימוש");
             
-            let html = `
-                <div class="col-span-full font-black text-indigo-900 border-b pb-2 mb-2 italic">רישום ${role}</div>
-                <div><label>שם מלא</label><input id="f-name" class="input-styled" required></div>
-                <div><label>מייל</label><input id="f-email" class="input-styled" value="${currentId.includes('@')?currentId:''}"></div>
-                <div><label>נייד</label><input id="f-phone" class="input-styled" value="${!currentId.includes('@')?currentId:''}"></div>
-            `;
-
-            if(role === 'customer') {
-                html += `
-                    <div><label>נייד נוסף</label><input id="f-phone2" class="input-styled"></div>
-                    <div class="col-span-full"><label>כתובת (לשיוך הנקודה הקרובה)</label><input id="f-addr" class="input-styled" required></div>
-                `;
-                submitBtn.innerText = "העבר אותי לנקודת האיסוף שלי";
-            } else if(role === 'vendor') {
-                html += `
-                    <div><label>שם העסק</label><input id="v-biz" class="input-styled"></div>
-                    <div><label>כתובת עסק</label><input id="v-addr" class="input-styled"></div>
-                    <div class="col-span-full grid grid-cols-4 gap-2 bg-slate-50 p-4 rounded-2xl">
-                        <input id="v-b-o" placeholder="בעל ח-ן" class="input-styled text-xs">
-                        <input id="v-b-n" placeholder="בנק" class="input-styled text-xs">
-                        <input id="v-b-s" placeholder="סניף" class="input-styled text-xs">
-                        <input id="v-b-a" placeholder="ח-ן" class="input-styled text-xs">
-                    </div>
-                `;
-                submitBtn.innerText = "הגש בקשת ספק לאישור";
-            } else if(role === 'hub') {
-                html += `
-                    <div><label>שם הנקודה</label><input id="h-point" class="input-styled"></div>
-                    <div><label>כתובת גוגל</label><input id="h-addr" class="input-styled"></div>
-                `;
-                submitBtn.innerText = "הגש בקשת נקודה לאישור";
-            }
-            container.innerHTML = html;
-        }
-
-        async function finalize() {
-            const err = document.getElementById('val-error');
-            const p1 = document.getElementById('pass1').value;
-            const p2 = document.getElementById('pass2').value;
-            const terms = document.getElementById('terms-check').checked;
-            
-            let list = [];
-            if(!document.getElementById('f-name').value) list.push("שם מלא חובה");
-            if(p1 !== p2) list.push("הסיסמאות לא זהות");
-            if(p1.length < 6) list.push("סיסמה קצרה מדי");
-            if(!terms) list.push("חובה לאשר תנאים");
-
-            if(list.length > 0) {
-                err.innerHTML = list.join(" | ");
-                err.classList.remove('hidden');
-                return;
-            }
-
-            const data = { idKey: currentId, name: document.getElementById('f-name').value, role: role, status: role === 'customer' ? 'approved' : 'pending' };
+            const data = { idKey: currentId, name: document.getElementById('f-name').value, role: role, status: role === 'לקוח' ? 'approved' : 'pending' };
             await db.collection("users").add(data);
-
-            if(role === 'customer') {
-                document.getElementById('page-auth').classList.add('hidden');
-                document.getElementById('page-hub-match').classList.remove('hidden');
-                document.getElementById('assigned-hub-name').innerText = "החנות של " + (document.getElementById('f-addr').value.split(',')[0] || "השכונה");
-            } else {
-                alert("הבקשה הועברה לאישור אדמין. ניצור קשר בקרוב.");
-                location.reload();
-            }
+            
+            alert(role === 'לקוח' ? "נרשמת! מעביר אותך לחנות..." : "בקשתך בטיפול. הודעה תשלח לאחר אישור מנהל.");
+            location.reload();
         }
-
-        function openContact() { document.getElementById('modal-contact').classList.remove('hidden'); }
-        function closeContact() { document.getElementById('modal-contact').classList.add('hidden'); }
-        function loginSocial(p) { alert(`מתחבר עם ${p}...`); }
     </script>
 </body>
 </html>
