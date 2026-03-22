@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  SUPPLIER
+  PICKUP_POINT
+  ADMIN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  READY_FOR_PICKUP
+  PICKED_UP
+  CANCELLED
+}
+
+enum ComplaintStatus {
+  NEW
+  IN_PROGRESS
+  WAITING_FOR_SUPPLIER
+  RESOLVED
+}
+
+enum ComplaintType {
+  DAMAGED_PRODUCT
+  WRONG_QUANTITY
+  NOT_RECEIVED
+  OTHER
+}
+
+enum FairStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Users ────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  phone         String   @unique
+  email         String?
+  name          String
+  role          UserRole
+  passwordHash  String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations based on role
+  supplier      Supplier?
+  pickupPoint   PickupPoint?
+  customer      Customer?
+
+  // OTP verification
+  otpCodes      OtpCode[]
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Supplier ─────────────────────────────────────────────────
+
+model Supplier {
+  id             String         @id @default(cuid())
+  userId         String         @unique
+  businessName   String
+  description    String?
+  logo           String?
+  address        String?
+  approvalStatus ApprovalStatus @default(PENDING)
+  approvedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+  fairs    Fair[]
+
+  orderItems OrderItem[]
+  complaints Complaint[]
+}
+
+// ─── Pickup Point ─────────────────────────────────────────────
+
+model PickupPoint {
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  businessName    String
+  description     String?
+  logo            String?
+  address         String
+  city            String
+  lat             Float?
+  lng             Float?
+  commissionRate  Float          @default(0) // % from each sale
+  approvalStatus  ApprovalStatus @default(PENDING)
+  approvedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productAssignments ProductPickupPoint[]
+  orders            Order[]
+  fairs             Fair[]
+}
+
+// ─── Customer ─────────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  address   String?
+  city      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
+  complaints Complaint[]
+}
+
+// ─── Products ─────────────────────────────────────────────────
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  icon     String?
+  products Product[]
+}
+
+model Product {
+  id             String         @id @default(cuid())
+  supplierId     String
+  categoryId     String
+  name           String
+  description    String?
+  image          String?
+  unitType       String         // kg, unit, package, etc.
+  supplierPrice  Float          // price set by supplier
+  approvalStatus ApprovalStatus @default(PENDING)
+  cutoffDate     DateTime?      // order deadline
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  supplier           Supplier             @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  category           Category             @relation(fields: [categoryId], references: [id])
+  pickupPointAssignments ProductPickupPoint[]
+  orderItems         OrderItem[]
+}
+
+// Junction: which products are available at which pickup points
+model ProductPickupPoint {
+  id            String @id @default(cuid())
+  productId     String
+  pickupPointId String
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pickupPoint PickupPoint @relation(fields: [pickupPointId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, pickupPointId])
+}
+
+// ─── Orders ───────────────────────────────────────────────────
+
+model Order {
+  id            String      @id @default(cuid())
+  customerId    String
+  pickupPointId String
+  status        OrderStatus @default(PENDING)
+  totalPrice    Float
+  paidAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  pickupPoint PickupPoint @relation(fields: [pickupPointId], references: [id])
+  items       OrderItem[]
+  complaint   Complaint?
+}
+
+model OrderItem {
+  id            String @id @default(cuid())
+  orderId       String
+  productId     String
+  supplierId    String
+  quantity      Float
+  unitPrice     Float  // final consumer price at time of order
+  supplierPrice Float  // supplier's price at time of order
+  totalPrice    Float
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id])
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+}
+
+// ─── Complaints ───────────────────────────────────────────────
+
+model Complaint {
+  id          String          @id @default(cuid())
+  orderId     String          @unique
+  customerId  String
+  supplierId  String
+  type        ComplaintType
+  description String
+  imageUrl    String?
+  status      ComplaintStatus @default(NEW)
+  resolution  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+
+  messages ComplaintMessage[]
+}
+
+model ComplaintMessage {
+  id          String   @id @default(cuid())
+  complaintId String
+  authorRole  UserRole // who sent this message
+  message     String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+}
+
+// ─── Fairs ────────────────────────────────────────────────────
+
+model Fair {
+  id            String     @id @default(cuid())
+  supplierId    String
+  pickupPointId String
+  title         String
+  description   String?
+  image         String?
+  date          DateTime
+  startTime     String     // e.g. "08:00"
+  endTime       String     // e.g. "14:00"
+  status        FairStatus @default(PENDING)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  supplier    Supplier    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  pickupPoint PickupPoint @relation(fields: [pickupPointId], references: [id], onDelete: Cascade)
+}
+
+// ─── Platform Settings ────────────────────────────────────────
+
+model PlatformSettings {
+  id                 String @id @default("default")
+  platformCommission Float  @default(5) // % platform takes from each sale
+  updatedAt          DateTime @updatedAt
+}

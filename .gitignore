@@ -43,3 +43,5 @@ next-env.d.ts
 agents.py
 output.json
 *.docx
+
+/src/generated/prisma
