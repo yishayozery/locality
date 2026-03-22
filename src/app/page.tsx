@@ -1,373 +1,172 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Container from "@/components/ui/Container";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
+'use client';
 
-/* ─── Hero Section ─────────────────────────────────────────── */
-function Hero() {
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+// התחברות ל-Supabase
+// וודא שהמפתחות האלו מוגדרים בתוך קובץ .env.local 
+// או שתחליף את process.env בכתובות האמיתיות (בתוך גרשיים) אם יש שגיאת Url
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export default function LocalityApp() {
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [packageName, setPackageName] = useState('');
+  const [customerName, setCustomerName] = useState('');
+
+  // 1. שליפת חבילות מהענן (Database)
+  const fetchPackages = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPackages(data || []);
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  // 2. הוספת חבילה חדשה בלחיצה על הכפתור
+  const handleAddPackage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!packageName) return;
+
+    try {
+      const { error } = await supabase
+        .from('packages')
+        .insert([{ 
+          name: packageName, 
+          customer_name: customerName || 'אורח',
+          status: 'בטיפול' 
+        }]);
+
+      if (error) throw error;
+
+      // ניקוי שדות ורענון רשימה
+      setPackageName('');
+      setCustomerName('');
+      fetchPackages();
+    } catch (error: any) {
+      alert('שגיאה בהוספה: ' + error.message);
+    }
+  };
+
+  // 3. מחיקת חבילה
+  const deletePkg = async (id: string) => {
+    if (!confirm('האם למחוק את החבילה מהמערכת?')) return;
+    const { error } = await supabase.from('packages').delete().eq('id', id);
+    if (!error) fetchPackages();
+  };
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-bl from-primary/5 via-surface to-secondary/5 py-20 lg:py-32">
-      <Container>
-        <div className="mx-auto max-w-3xl text-center">
-          <Badge variant="secondary" className="mb-6">
-            חדש! פלטפורמה לשיווק ישיר
-          </Badge>
-          <h1 className="mb-6 text-4xl font-extrabold leading-tight md:text-5xl lg:text-6xl">
-            <span className="text-primary">הטעם</span> של השכונה
+    <div className="min-h-screen bg-[#0f172a] text-white font-sans rtl" dir="rtl">
+      {/* Navbar יוקרתי */}
+      <nav className="p-6 flex justify-between items-center border-b border-white/10 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="text-3xl font-black tracking-tighter text-blue-500">LOCALITY</div>
+        <div className="flex gap-6 text-sm font-medium text-gray-400">
+          <span className="hover:text-white cursor-pointer transition">לוח בקרה</span>
+          <span className="hover:text-white cursor-pointer transition">משלוחים</span>
+          <span className="hover:text-white cursor-pointer transition">הגדרות</span>
+        </div>
+      </nav>
+
+      <main className="max-w-6xl mx-auto p-8">
+        {/* Hero Section */}
+        <header className="py-16 text-center">
+          <h1 className="text-6xl md:text-8xl font-black mb-6 bg-gradient-to-r from-blue-400 to-indigo-600 bg-clip-text text-transparent">
+            ניהול חבילות <br/> מעולם אחר.
           </h1>
-          <p className="mb-10 text-lg text-text-muted md:text-xl">
-            פלטפורמה שמחברת יצרנים וחקלאים ישירות לנקודות איסוף שכונתיות.
-            <br className="hidden md:block" />
-            ללא מתווכים. טרי. מקומי. הוגן.
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            הפלטפורמה המתקדמת ביותר לניהול לוגיסטיקה מקומית. <br/> חכם, מהיר, ומחובר לענן בזמן אמת.
           </p>
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" variant="primary">
-              אני רוצה לקנות
-            </Button>
-            <Button size="lg" variant="secondary">
-              אני ספק / חקלאי
-            </Button>
-            <Button size="lg" variant="outline">
-              אני נקודת איסוף
-            </Button>
-          </div>
+        </header>
+
+        {/* טופס הוספה מעוצב */}
+        <div className="bg-white/5 p-8 rounded-[40px] border border-white/10 shadow-2xl backdrop-blur-sm mb-12">
+          <form onSubmit={handleAddPackage} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input 
+              type="text" 
+              placeholder="שם החבילה / מספר מעקב" 
+              className="bg-white/10 border-none p-5 rounded-2xl text-xl outline-none focus:ring-2 ring-blue-500 transition"
+              value={packageName}
+              onChange={(e) => setPackageName(e.target.value)}
+            />
+            <input 
+              type="text" 
+              placeholder="שם הלקוח (אופציונלי)" 
+              className="bg-white/10 border-none p-5 rounded-2xl text-xl outline-none focus:ring-2 ring-blue-500 transition"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+            />
+            <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-2xl font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/20">
+              הוסף למערכת 🚀
+            </button>
+          </form>
         </div>
-      </Container>
 
-      {/* Decorative circles */}
-      <div className="pointer-events-none absolute -top-20 -left-20 h-72 w-72 rounded-full bg-primary/5" />
-      <div className="pointer-events-none absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-secondary/5" />
-    </section>
-  );
-}
-
-/* ─── How It Works ─────────────────────────────────────────── */
-function HowItWorks() {
-  const steps = [
-    {
-      icon: "🌾",
-      title: "ספק מעלה מוצרים",
-      description:
-        "חקלאים ויצרנים מקומיים נרשמים ומעלים את המוצרים שלהם, קובעים מחיר ותאריכי אספקה.",
-    },
-    {
-      icon: "🏪",
-      title: "נקודה משווקת",
-      description:
-        "נקודות איסוף שכונתיות מקבלות דף נחיתה ייחודי, משווקות ללקוחות ומנהלות את ההזמנות.",
-    },
-    {
-      icon: "🛒",
-      title: "לקוח אוסף",
-      description:
-        "לקוחות מזמינים, משלמים ואוספים מהנקודה הקרובה. טרי, נוח, וישירות מהיצרן.",
-    },
-  ];
-
-  return (
-    <section id="how-it-works" className="py-20">
-      <Container>
-        <div className="mb-12 text-center">
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl">איך זה עובד?</h2>
-          <p className="text-text-muted text-lg">שלושה צעדים פשוטים</p>
-        </div>
-        <div className="grid gap-8 md:grid-cols-3">
-          {steps.map((step, i) => (
-            <div key={i} className="text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-4xl">
-                {step.icon}
+        {/* רשימת חבילות בפורמט כרטיסיות (Cards) */}
+        <div className="mt-12">
+          <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
+            <span className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+            משלוחים פעילים (Live)
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loading ? (
+              <div className="col-span-full text-center py-10 text-gray-500 text-xl italic">
+                מתחבר ללוויין... טוען נתונים
               </div>
-              <div className="mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white font-bold text-sm">
-                {i + 1}
+            ) : packages.length === 0 ? (
+              <div className="col-span-full text-center py-10 text-gray-500 text-xl">
+                אין חבילות רשומות כרגע במערכת.
               </div>
-              <h3 className="mb-2 text-xl font-semibold">{step.title}</h3>
-              <p className="text-text-muted">{step.description}</p>
-            </div>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-}
+            ) : (
+              packages.map((pkg) => (
+                <div key={pkg.id} className="bg-white/5 border border-white/5 p-8 rounded-[32px] hover:border-blue-500/50 transition-all group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl rounded-full"></div>
+                  
+                  <div className="flex justify-between items-start mb-6 relative z-10">
+                    <span className="bg-blue-500/10 text-blue-400 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                      {pkg.status}
+                    </span>
+                    <button 
+                      onClick={() => deletePkg(pkg.id)}
+                      className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-opacity"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
-/* ─── Categories ───────────────────────────────────────────── */
-function Categories() {
-  const categories = [
-    { icon: "🍎", name: "ירקות ופירות", count: "120+ מוצרים" },
-    { icon: "🥖", name: "מזון ומאפים", count: "80+ מוצרים" },
-    { icon: "🧥", name: "ביגוד ואופנה", count: "בקרוב" },
-    { icon: "🍯", name: "דבש ותבלינים", count: "40+ מוצרים" },
-    { icon: "🧀", name: "מחלבה", count: "60+ מוצרים" },
-    { icon: "🫒", name: "שמנים וזיתים", count: "30+ מוצרים" },
-  ];
-
-  return (
-    <section id="categories" className="bg-white py-20">
-      <Container>
-        <div className="mb-12 text-center">
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl">קטגוריות</h2>
-          <p className="text-text-muted text-lg">מגוון רחב של מוצרים מקומיים ואיכותיים</p>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {categories.map((cat, i) => (
-            <Card key={i} className="cursor-pointer text-center hover:border-primary border border-transparent">
-              <div className="mb-3 text-4xl">{cat.icon}</div>
-              <h3 className="mb-1 font-semibold">{cat.name}</h3>
-              <p className="text-sm text-text-muted">{cat.count}</p>
-            </Card>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-}
-
-/* ─── Upcoming Fairs ───────────────────────────────────────── */
-function UpcomingFairs() {
-  const fairs = [
-    {
-      title: "יריד ירקות אורגניים",
-      supplier: "משק השרון",
-      location: "נקודת איסוף כפר סבא",
-      date: "28.03.2026",
-      time: "08:00–14:00",
-    },
-    {
-      title: "טעימות דבש ושמנים",
-      supplier: "כוורת הגליל",
-      location: "נקודת איסוף חיפה מרכז",
-      date: "01.04.2026",
-      time: "10:00–16:00",
-    },
-    {
-      title: "יריד גבינות מקומיות",
-      supplier: "מחלבת הבוקר",
-      location: "נקודת איסוף באר שבע",
-      date: "04.04.2026",
-      time: "09:00–13:00",
-    },
-  ];
-
-  return (
-    <section id="fairs" className="py-20">
-      <Container>
-        <div className="mb-12 text-center">
-          <Badge variant="secondary" className="mb-4">חדש!</Badge>
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl">ירידים קרובים</h2>
-          <p className="text-text-muted text-lg">
-            ספקים פותחים שולחנות מכירה בנקודות האיסוף — בואו לטעום!
-          </p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {fairs.map((fair, i) => (
-            <Card key={i} className="border-r-4 border-r-secondary">
-              <div className="mb-3 flex items-center justify-between">
-                <Badge variant="secondary">{fair.date}</Badge>
-                <span className="text-sm text-text-muted">{fair.time}</span>
-              </div>
-              <h3 className="mb-2 text-lg font-semibold">{fair.title}</h3>
-              <p className="text-sm text-text-muted mb-1">🌾 {fair.supplier}</p>
-              <p className="text-sm text-text-muted">📍 {fair.location}</p>
-              <Button variant="outline" size="sm" className="mt-4 w-full">
-                פרטים נוספים
-              </Button>
-            </Card>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-}
-
-/* ─── For Suppliers ────────────────────────────────────────── */
-function ForSuppliers() {
-  const benefits = [
-    { icon: "💰", title: "מכירה ישירה", text: "אתם קובעים את המחיר, בלי מתווכים." },
-    { icon: "📊", title: "דשבורד ניהול", text: "צפייה בהזמנות, ניהול מוצרים, דוחות מכירה." },
-    { icon: "🗺️", title: "פריסה ארצית", text: "גישה לנקודות איסוף בכל רחבי הארץ." },
-    { icon: "🎪", title: "ירידי מכירה", text: "אפשרות לפתוח יריד מכירה ישירה בנקודות." },
-  ];
-
-  return (
-    <section id="for-suppliers" className="bg-primary/5 py-20">
-      <Container>
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <Badge variant="primary" className="mb-4">לספקים וחקלאים</Badge>
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              הגיע הזמן למכור ישירות
-            </h2>
-            <p className="mb-8 text-text-muted text-lg">
-              הצטרפו לפלטפורמה, העלו מוצרים, ותתחילו למכור ישירות ללקוחות דרך
-              רשת נקודות האיסוף שלנו. בלי מתווכים, בלי ספקולציות.
-            </p>
-            <Button size="lg" variant="primary">
-              הרשמה כספק
-            </Button>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {benefits.map((b, i) => (
-              <Card key={i}>
-                <div className="mb-3 text-3xl">{b.icon}</div>
-                <h3 className="mb-1 font-semibold">{b.title}</h3>
-                <p className="text-sm text-text-muted">{b.text}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </Container>
-    </section>
-  );
-}
-
-/* ─── For Pickup Points ────────────────────────────────────── */
-function ForPickupPoints() {
-  const benefits = [
-    { icon: "🌐", title: "דף נחיתה ייחודי", text: "דף מכירה מותאם אישית לנקודה שלכם." },
-    { icon: "📱", title: "ניהול מהנייד", text: "קבלו הזמנות, עדכנו סטטוסים, שלחו הודעות." },
-    { icon: "💸", title: "עמלה על כל מכירה", text: "הרוויחו אחוז מכל מכירה שעוברת דרככם." },
-    { icon: "👥", title: "בניית קהילה", text: "הפכו את הנקודה שלכם למקום מפגש שכונתי." },
-  ];
-
-  return (
-    <section id="for-points" className="py-20">
-      <Container>
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <div className="order-2 grid gap-4 sm:grid-cols-2 lg:order-1">
-            {benefits.map((b, i) => (
-              <Card key={i}>
-                <div className="mb-3 text-3xl">{b.icon}</div>
-                <h3 className="mb-1 font-semibold">{b.title}</h3>
-                <p className="text-sm text-text-muted">{b.text}</p>
-              </Card>
-            ))}
-          </div>
-          <div className="order-1 lg:order-2">
-            <Badge variant="secondary" className="mb-4">לנקודות איסוף</Badge>
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              הפכו את החנות למרכז שכונתי
-            </h2>
-            <p className="mb-8 text-text-muted text-lg">
-              הצטרפו כנקודת איסוף, קבלו מוצרים טריים מספקים מקומיים, והרוויחו
-              עמלה על כל מכירה. פשוט, נוח, ומשתלם.
-            </p>
-            <Button size="lg" variant="secondary">
-              הרשמה כנקודת איסוף
-            </Button>
-          </div>
-        </div>
-      </Container>
-    </section>
-  );
-}
-
-/* ─── Stats ────────────────────────────────────────────────── */
-function Stats() {
-  const stats = [
-    { value: "50+", label: "ספקים פעילים" },
-    { value: "120+", label: "נקודות איסוף" },
-    { value: "5,000+", label: "לקוחות מרוצים" },
-    { value: "7", label: "אזורים בארץ" },
-  ];
-
-  return (
-    <section className="bg-primary py-16 text-white">
-      <Container>
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {stats.map((stat, i) => (
-            <div key={i} className="text-center">
-              <div className="mb-2 text-3xl font-extrabold md:text-4xl">
-                {stat.value}
-              </div>
-              <div className="text-primary-light text-sm font-medium">
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-}
-
-/* ─── Contact ──────────────────────────────────────────────── */
-function Contact() {
-  return (
-    <section id="contact" className="bg-white py-20">
-      <Container>
-        <div className="mx-auto max-w-2xl">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">צור קשר</h2>
-            <p className="text-text-muted text-lg">
-              שאלות? הצעות? נשמח לשמוע מכם
-            </p>
-          </div>
-          <Card className="p-8">
-            <form className="space-y-5">
-              <div>
-                <label className="mb-1 block text-sm font-medium">שם מלא</label>
-                <input
-                  type="text"
-                  placeholder="הכנס שם מלא"
-                  className="w-full rounded-xl border border-gray-200 bg-surface px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium">נייד</label>
-                  <input
-                    type="tel"
-                    placeholder="050-0000000"
-                    className="w-full rounded-xl border border-gray-200 bg-surface px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
+                  <h4 className="text-2xl font-bold text-white mb-2 relative z-10">{pkg.name}</h4>
+                  <p className="text-gray-400 font-medium relative z-10">{pkg.customer_name}</p>
+                  
+                  <div className="mt-6 pt-6 border-t border-white/5 flex justify-between items-center text-xs text-gray-500">
+                    <span>עודכן לאחרונה</span>
+                    <span>{new Date(pkg.created_at).toLocaleDateString('he-IL')}</span>
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium">מייל</label>
-                  <input
-                    type="email"
-                    placeholder="email@example.com"
-                    dir="ltr"
-                    className="w-full rounded-xl border border-gray-200 bg-surface px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">הודעה</label>
-                <textarea
-                  rows={4}
-                  placeholder="ספרו לנו במה נוכל לעזור..."
-                  className="w-full rounded-xl border border-gray-200 bg-surface px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
-                />
-              </div>
-              <Button type="submit" variant="primary" size="lg" className="w-full">
-                שלח פניה
-              </Button>
-            </form>
-          </Card>
+              ))
+            )}
+          </div>
         </div>
-      </Container>
-    </section>
-  );
-}
-
-/* ─── Main Page ────────────────────────────────────────────── */
-export default function Home() {
-  return (
-    <>
-      <Header />
-      <main>
-        <Hero />
-        <HowItWorks />
-        <Categories />
-        <UpcomingFairs />
-        <ForSuppliers />
-        <Stats />
-        <ForPickupPoints />
-        <Contact />
       </main>
-      <Footer />
-    </>
+
+      <footer className="p-20 text-center text-gray-600 text-sm border-t border-white/5 mt-20">
+        © 2026 Locality Global Systems. All rights reserved.
+      </footer>
+    </div>
   );
 }
