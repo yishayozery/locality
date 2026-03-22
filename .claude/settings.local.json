@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/ASUS/AppData/Roaming/**)",
+      "Read(//c/Users/ASUS/miniconda3/**)",
+      "Read(//usr/**)",
+      "Bash(PYTHON=\"/c/Users/ASUS/AppData/Local/Programs/Python/Python312/python.exe\" \"$PYTHON\" -c \":*)",
+      "Bash(where python:*)",
+      "Bash(where python3:*)",
+      "Bash(where py:*)",
+      "Bash(powershell.exe -File:*)",
+      "Bash(cmd.exe /c \"npx --yes create-next-app@latest locality-app --typescript --tailwind --eslint --app --src-dir --import-alias @/* --use-npm --no-turbopack\")",
+      "Bash(powershell.exe -Command \"npx --version\")",
+      "Bash(powershell.exe -Command \"node --version; npm --version\")",
+      "Bash(powershell.exe -Command \"Get-Command node -ErrorAction SilentlyContinue; Get-ChildItem ''C:\\\\Program Files\\\\nodejs\\\\'' -ErrorAction SilentlyContinue; Get-ChildItem ''C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\'' -ErrorAction SilentlyContinue; where.exe node 2>&1\")",
+      "Bash(powershell.exe -Command \"Test-Path ''C:\\\\Program Files\\\\nodejs\\\\node.exe''\")",
+      "Bash(powershell.exe -Command \"winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(powershell.exe -Command \"\\(Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing\\).Content\")"
+    ]
+  }
+}
